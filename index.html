@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiscalização HATI - Vistoria</title>
+<style>
+*{box-sizing:border-box}
+:root{--green:#168a57;--green-dark:#116b45;--green-soft:#e6f4ed;--blue:#3d78b8;--blue-soft:#e7f0fa;--yellow:#d4a72c;--yellow-soft:#fbf3d7;--red:#b42318;--red-soft:#f9e5e3;--dark:#172026;--muted:#69757c;--line:#dce2e5;--bg:#eef1f3}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--dark)}
+.app{max-width:760px;margin:auto;background:#fff;min-height:100vh}
+header{background:var(--dark);color:#fff;padding:16px 18px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px #0002}
+.header-main{display:flex;align-items:center;gap:12px}.logo-mark{width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:900;font-size:16px}
+header h1{margin:0;font-size:21px;letter-spacing:.5px}header p{margin:4px 0 0;color:#b9c2c7;font-size:12px}
+main{padding:14px}.status{padding:11px 13px;border-radius:10px;background:var(--green-soft);color:var(--green-dark);font-size:13px;margin-bottom:12px;display:none;border:1px solid #c8e7d7}
+.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.metric{border:1px solid var(--line);border-radius:12px;padding:11px 9px;background:#fff;box-shadow:0 2px 7px #00000008}.metric-label{font-size:10px;font-weight:bold;color:var(--muted);line-height:1.15}.metric-value{font-size:21px;font-weight:900;margin-top:4px}
+.metric.green{background:var(--green-soft);border-color:#c8e7d7}.metric.green .metric-value{color:var(--green-dark)}.metric.yellow{background:var(--yellow-soft);border-color:#ead99b}.metric.yellow .metric-value{color:#8d6a08}.metric.blue{background:var(--blue-soft);border-color:#cbdced}.metric.blue .metric-value{color:#2d619a}.metric.red{background:var(--red-soft);border-color:#ecc7c3}.metric.red .metric-value{color:var(--red)}
+.tabs{display:flex;gap:8px;margin-bottom:12px}.tab{flex:1;border:1px solid var(--line);background:#f7f8f8;color:var(--muted);padding:11px;border-radius:10px;font-weight:bold;cursor:pointer}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #0000000b}.card h2{font-size:15px;margin:0 0 13px;color:var(--dark);display:flex;align-items:center;gap:8px}.section-number{width:24px;height:24px;border-radius:7px;background:var(--green-soft);color:var(--green-dark);display:inline-flex;align-items:center;justify-content:center;font-size:11px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:11px;font-weight:bold;color:#59656c;margin-bottom:5px;text-transform:uppercase}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd2d6;border-radius:9px;font-size:14px;background:#fff;color:var(--dark);outline:none}input:focus,select:focus,textarea:focus{border-color:#75b997;box-shadow:0 0 0 3px #168a5715}textarea{min-height:88px;resize:vertical}.full{grid-column:1/-1}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.photo-box{border:1px dashed #aeb8bd;border-radius:12px;padding:10px;text-align:center;background:#fafbfb;overflow:hidden}.photo-box strong{display:block;font-size:12px;margin-bottom:4px}.photo-preview{width:100%;height:108px;object-fit:cover;border-radius:8px;display:none;margin:7px 0}.photo-box input{font-size:11px;padding:7px}.photo-box.has-photo{border-color:#75b997;background:#f2faf6}.photo-required{font-size:10px;color:var(--muted)}
+.result-status{border-left:4px solid var(--green);padding:10px 12px;background:#f7faf8;border-radius:8px;margin-bottom:10px;font-size:12px;color:#526067}
+.btn{width:100%;border:0;border-radius:10px;padding:13px;font-weight:bold;font-size:14px;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--dark);color:white;margin-top:8px}.danger{background:#fff;color:var(--red);border:1px solid #e5b9b5;margin-top:8px}
+.toolbar{display:flex;gap:8px;margin-bottom:10px}.toolbar input{flex:1}.toolbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 12px;font-weight:bold}
+.records-empty{border:1px dashed #cbd2d6;border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:13px}.footer{text-align:center;padding:10px 0 25px;color:#78838a;font-size:11px}
+
+.photo-section{padding-bottom:16px}
+.photo-intro{display:flex;gap:10px;align-items:center;background:#f7faf8;border:1px solid #d9ebe2;border-radius:11px;padding:11px;margin-bottom:12px}
+.photo-intro-icon{width:38px;height:38px;border-radius:10px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.photo-intro strong{font-size:13px}.photo-intro p{margin:3px 0 0;font-size:11px;color:var(--muted);line-height:1.35}
+.photo-progress{margin-bottom:13px}.photo-progress>div:first-child{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:5px}
+.photo-progress strong{color:var(--green-dark)}
+.progress-track{height:7px;background:#e8ecee;border-radius:99px;overflow:hidden}.progress-fill{height:100%;width:0;background:var(--green);border-radius:99px;transition:width .25s}
+.photo-grid-new{grid-template-columns:repeat(2,1fr);gap:10px}
+.photo-card{position:relative;border:1px solid #d7dee1;border-radius:13px;background:#fff;padding:9px;cursor:pointer;overflow:hidden;transition:.15s}
+.photo-card:hover{border-color:#a9cdbb}.photo-card input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.photo-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.photo-number{width:24px;height:24px;border-radius:7px;background:#f0f3f4;color:#657177;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}
+.photo-check{font-size:18px;color:#a2adb2;line-height:1}.photo-card.done{border-color:#78b998;background:#f4faf7}.photo-card.done .photo-number{background:var(--green-soft);color:var(--green-dark)}.photo-card.done .photo-check{color:var(--green);font-size:15px}
+.photo-thumb{height:120px;border-radius:9px;background:#f2f4f5;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px}
+.photo-thumb .camera-icon{font-size:27px;opacity:.55}.photo-thumb .photo-preview{width:100%;height:100%;object-fit:contain;border-radius:9px;margin:0;display:none;background:#f2f4f5}
+.photo-card-title{font-size:12px;font-weight:800;color:var(--dark)}.photo-card-hint{font-size:9px;color:var(--muted);margin-top:3px}
+.photo-card-extra{grid-column:1/-1}.photo-card-extra .photo-thumb{height:92px}
+
+
+.auth-card{max-width:520px;margin:30px auto}.auth-actions{display:flex;gap:8px}.auth-actions .btn{flex:1}.user-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;padding:9px 11px;background:#f7f8f8;border:1px solid var(--line);border-radius:10px;font-size:11px;color:var(--muted)}.user-bar button{border:0;background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-weight:bold;cursor:pointer}.saving{opacity:.65;pointer-events:none}.photo-gallery{position:fixed;inset:0;background:#000b;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.gallery-box{background:#fff;border-radius:14px;width:min(760px,100%);max-height:92vh;overflow:auto;padding:14px}.gallery-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.gallery-close{border:0;background:#eee;border-radius:8px;padding:8px 12px;font-weight:bold}.gallery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.gallery-grid img{width:100%;height:auto;max-height:65vh;object-fit:contain;background:#f2f4f5;border-radius:9px}.record-actions{margin-top:9px;display:flex;gap:7px}.record-actions button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:bold;cursor:pointer}
+@media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}}@media(max-width:380px){.grid,.photo-grid{grid-template-columns:1fr}header h1{font-size:19px}main{padding:10px}}
+@media print{body{background:#fff}.app{max-width:none}.no-print{display:none!important}header{position:static;box-shadow:none}.card{box-shadow:none;break-inside:avoid}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="app">
+<header><div class="header-main"><div class="logo-mark">HATI</div><div><h1>FISCALIZAÇÃO HATI</h1><p>Registro digital de vistoria de cargas</p></div></div></header>
+
+<main>
+<div id="authCard" class="card auth-card">
+<h2><span class="section-number">🔐</span> Acesso ao sistema</h2>
+<div class="result-status">Entre com o usuário único do Supabase para acessar as vistorias.</div>
+<div class="grid">
+<div class="full"><label>E-mail</label><input id="authEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div>
+<div class="full"><label>Senha</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="Mínimo recomendado: 8 caracteres"></div>
+</div>
+<div class="auth-actions" style="margin-top:10px"><button class="btn primary" type="button" onclick="entrar()">ENTRAR</button></div>
+<div id="authMsg" style="font-size:11px;color:var(--muted);margin-top:9px"></div>
+</div>
+<div id="appContent" style="display:none">
+<div id="userBar" class="user-bar"><span id="userEmail"></span><button type="button" onclick="sair()">SAIR</button></div>
+<div id="status" class="status"></div>
+<section class="dashboard no-print">
+<div class="metric green"><div class="metric-label">VISTORIAS</div><div class="metric-value" id="metricTotal">0</div></div>
+<div class="metric yellow"><div class="metric-label">AGUARDANDO</div><div class="metric-value" id="metricAguardando">0</div></div>
+<div class="metric blue"><div class="metric-label">LIBERADAS</div><div class="metric-value" id="metricLiberadas">0</div></div>
+<div class="metric red"><div class="metric-label">PENDENTES</div><div class="metric-value" id="metricPendentes">0</div></div>
+</section>
+<div class="tabs no-print">
+<button class="tab active" type="button" onclick="mostrarAba('nova',this)">NOVA VISTORIA</button>
+<button class="tab" type="button" onclick="mostrarAba('registros',this)">VISTORIAS REALIZADAS</button>
+</div>
+<div id="abaNova">
+
+<section class="card">
+<h2><span class="section-number">01</span> Dados da carga</h2>
+<div class="grid">
+  <div class="full"><label>Empresa <span class="required">*</span></label><input id="empresa" placeholder="Ex.: PRIMARY TRADING LTDA"></div>
+  <div><label>NFE <span class="required">*</span></label><input id="nfe" placeholder="Número"></div>
+  <div><label>CRT</label><input id="crt" placeholder="BR-0000-000000"></div>
+  <div><label>Filhote</label><input id="filhote" value="01"></div>
+  <div><label>Motorista <span class="required">*</span></label><input id="motorista" placeholder="Nome completo"></div>
+  <div><label>Placa</label><input id="placa" placeholder="ABC-1D23"></div>
+  <div><label>Lacre</label><input id="lacre" placeholder="Número do lacre"></div>
+  <div><label>Tipo de carga</label>
+    <select id="tipo"><option>Vegetal</option><option>Animal</option><option>Perigosa</option><option>Outra</option></select>
+  </div>
+  <div class="full"><label>Produto</label><input id="produto" placeholder="Descrição do produto"></div>
+  <div><label>Lote</label><input id="lote" placeholder="Lote"></div>
+  <div><label>Validade</label><input id="validade" type="date"></div>
+</div>
+</section>
+
+<section class="card">
+<h2><span class="section-number">02</span> Equipe da vistoria</h2>
+<div class="grid">
+  <div><label>Colaborador</label><input id="colaborador" placeholder="Responsável pela vistoria"></div>
+  <div><label>Técnico</label><input id="tecnico" placeholder="Nome do técnico"></div>
+  <div><label>Data</label><input id="data" type="date"></div>
+  <div><label>Horário</label><input id="hora" type="time"></div>
+</div>
+</section>
+
+<section class="card photo-section">
+<h2><span class="section-number">03</span> Registro fotográfico</h2>
+<div class="photo-intro">
+  <div class="photo-intro-icon">📷</div>
+  <div>
+    <strong>Fotos da vistoria</strong>
+    <p>Registre cada item no enquadramento indicado. Toque em uma caixa para abrir a câmera.</p>
+  </div>
+</div>
+
+<div class="photo-progress">
+  <div><span>Fotos obrigatórias</span><strong id="photoCount">0 / 6</strong></div>
+  <div class="progress-track"><div id="photoProgressBar" class="progress-fill"></div></div>
+</div>
+
+<div class="photo-grid photo-grid-new">
+
+  <label class="photo-card" id="photoCard-placa1">
+    <div class="photo-card-head"><span class="photo-number">01</span><span class="photo-check" id="check-placa1">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">📷</span><img class="photo-preview" id="prev-placa1"></div>
+    <div class="photo-card-title">Placa dianteira</div>
+    <div class="photo-card-hint">Obrigatória • toque para fotografar</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-placa1','placa1')">
+  </label>
+
+  <label class="photo-card" id="photoCard-placa2">
+    <div class="photo-card-head"><span class="photo-number">02</span><span class="photo-check" id="check-placa2">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">📷</span><img class="photo-preview" id="prev-placa2"></div>
+    <div class="photo-card-title">Placa traseira</div>
+    <div class="photo-card-hint">Obrigatória • toque para fotografar</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-placa2','placa2')">
+  </label>
+
+  <label class="photo-card" id="photoCard-carreta">
+    <div class="photo-card-head"><span class="photo-number">03</span><span class="photo-check" id="check-carreta">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">🚛</span><img class="photo-preview" id="prev-carreta"></div>
+    <div class="photo-card-title">Carreta / veículo</div>
+    <div class="photo-card-hint">Obrigatória • vista geral</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-carreta','carreta')">
+  </label>
+
+  <label class="photo-card" id="photoCard-lacre">
+    <div class="photo-card-head"><span class="photo-number">04</span><span class="photo-check" id="check-lacre">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">🔒</span><img class="photo-preview" id="prev-lacre"></div>
+    <div class="photo-card-title">Lacre</div>
+    <div class="photo-card-hint">Obrigatória • número legível</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-lacre','lacre')">
+  </label>
+
+  <label class="photo-card" id="photoCard-produto">
+    <div class="photo-card-head"><span class="photo-number">05</span><span class="photo-check" id="check-produto">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">📦</span><img class="photo-preview" id="prev-produto"></div>
+    <div class="photo-card-title">Produto</div>
+    <div class="photo-card-hint">Obrigatória • estado da carga</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-produto','produto')">
+  </label>
+
+  <label class="photo-card" id="photoCard-doc">
+    <div class="photo-card-head"><span class="photo-number">06</span><span class="photo-check" id="check-doc">○</span></div>
+    <div class="photo-thumb"><span class="camera-icon">📄</span><img class="photo-preview" id="prev-doc"></div>
+    <div class="photo-card-title">Documento / NF</div>
+    <div class="photo-card-hint">Obrigatória • documento legível</div>
+    <input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-doc','doc')">
+  </label>
+
+  <div id="extrasContainer" class="full" style="display:contents"></div>
+
+  <button type="button" class="btn secondary full" style="margin-top:2px" onclick="adicionarFotoExtra()">＋ ADICIONAR FOTO ADICIONAL</button>
+
+</div>
+</section>
+
+<section class="card">
+<h2><span class="section-number">04</span> Resultado da vistoria</h2><div class="result-status">Selecione o resultado e registre todas as divergências ou ocorrências encontradas.</div>
+<div class="grid">
+  <div><label>Status</label>
+    <select id="statusVistoria">
+      <option>Aguardando análise</option><option>Liberado</option><option>Pendente</option><option>Não conforme</option>
+    </select>
+  </div>
+  <div><label>Quantidade de volumes</label><input id="volumes" type="number" min="0"></div>
+  <div class="full"><label>Observações / ocorrências</label><textarea id="obs" placeholder="Registre avarias, divergências, lacre, documentação e demais ocorrências..."></textarea></div>
+</div>
+</section>
+
+<div class="no-print"><button class="btn primary" onclick="salvar()">SALVAR VISTORIA</button>
+<button class="btn secondary" onclick="window.print()">IMPRIMIR / SALVAR PDF</button>
+<button class="btn danger" onclick="novoRegistro()">LIMPAR FORMULÁRIO</button></div>
+
+</div>
+<div id="abaRegistros" style="display:none" class="no-print">
+<section class="card"><h2><span class="section-number">↺</span> Vistorias realizadas</h2>
+<div class="toolbar"><input id="buscaRegistros" placeholder="Pesquisar empresa, NFE, motorista ou placa..." oninput="renderRegistros()"><button type="button" onclick="renderRegistros()">🔎</button></div>
+<div id="listaRegistros" class="records-empty">Nenhuma vistoria salva neste aparelho.</div>
+</section></div>
+</div>
+<div class="footer">Setor Operacional • Registro digital de fiscalização</div>
+<div id="photoGallery" class="photo-gallery" onclick="fecharGaleria(event)"><div class="gallery-box"><div class="gallery-head"><strong id="galleryTitle">Fotos da vistoria</strong><button class="gallery-close" type="button" onclick="fecharGaleria()">FECHAR</button></div><div id="galleryGrid" class="gallery-grid"></div></div></div>
+</main>
+</div>
+
+<script>
+const SUPABASE_URL='https://eqcyzbkbiodaxuywfqwp.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u9r4nq1uz7k5fiBM-MRyfQ_zwJJy2n8';
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const BUCKET='vistorias-fotos';
+let extraPhotoCount=0;
+const photoFiles={};
+
+function msg(text,ok=false){const el=document.getElementById('authMsg');if(el){el.textContent=text;el.style.color=ok?'var(--green-dark)':'var(--red)'}}
+async function entrar(){const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;if(!email||!password){msg('Informe e-mail e senha.');return}msg('Entrando...',true);const {error}=await supabase.auth.signInWithPassword({email,password});if(error)msg(error.message);}
+async function sair(){await supabase.auth.signOut()}
+function mostrarApp(session){document.getElementById('authCard').style.display=session?'none':'block';document.getElementById('appContent').style.display=session?'block':'none';if(session){document.getElementById('userEmail').textContent='👤 '+(session.user.email||'Usuário');atualizarDashboard();renderRegistros();}}
+supabase.auth.onAuthStateChange((_event,session)=>mostrarApp(session));
+
+function adicionarFotoExtra(){extraPhotoCount++;const n=extraPhotoCount,key='extra'+n,container=document.getElementById('extrasContainer');const card=document.createElement('label');card.className='photo-card photo-card-extra';card.id='photoCard-'+key;card.innerHTML=`<div class="photo-card-head"><span class="photo-number">+</span><span class="photo-check" id="check-${key}">○</span></div><div class="photo-thumb"><span class="camera-icon">📸</span><img class="photo-preview" id="prev-${key}"></div><div class="photo-card-title">Foto adicional ${n}</div><div class="photo-card-hint">Opcional • toque para fotografar</div><input type="file" accept="image/*" capture="environment" onchange="preview(this,'prev-${key}','${key}')">`;container.appendChild(card)}
+function preview(input,id,key){const img=document.getElementById(id),card=input.closest('.photo-card'),check=document.getElementById('check-'+key);if(input.files&&input.files[0]){photoFiles[key]=input.files[0];img.src=URL.createObjectURL(input.files[0]);img.style.display='block';const icon=card.querySelector('.camera-icon');if(icon)icon.style.display='none';card.classList.add('done');if(check)check.textContent='✓';atualizarFotos()}}
+function atualizarFotos(){const keys=['placa1','placa2','carreta','lacre','produto','doc'];const total=keys.filter(k=>document.getElementById('photoCard-'+k)?.classList.contains('done')).length;const c=document.getElementById('photoCount'),p=document.getElementById('photoProgressBar');if(c)c.textContent=total+' / 6';if(p)p.style.width=(total/6*100)+'%'}
+function getFormData(id){return document.getElementById(id)?.value?.trim()||''}
+function requiredPhotosOk(){const keys=['placa1','placa2','carreta','lacre','produto','doc'];return keys.every(k=>photoFiles[k])}
+async function prepareImage(file){return new Promise((resolve,reject)=>{if(!file){reject(new Error('Arquivo ausente'));return}const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const max=1920,scale=Math.min(1,max/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(blob=>{URL.revokeObjectURL(url);if(!blob){reject(new Error('Não foi possível processar a foto'));return}resolve(new File([blob],'foto.jpg',{type:'image/jpeg'}))},'image/jpeg',.85)}catch(e){URL.revokeObjectURL(url);reject(e)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('Não foi possível ler a foto'))};img.src=url})}
+async function uploadPhotos(vistoriaId){const paths=[];for(const [key,file] of Object.entries(photoFiles)){if(!file)continue;const prepared=await prepareImage(file);const path=`${vistoriaId}/${key}-${Date.now()}-${Math.random().toString(36).slice(2,8)}.jpg`;const {error}=await supabase.storage.from(BUCKET).upload(path,prepared,{contentType:'image/jpeg',upsert:false});if(error)throw error;paths.push({key,path,name:file.name})}return paths}
+async function salvar(){const empresa=getFormData('empresa'),nfe=getFormData('nfe'),motorista=getFormData('motorista');if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!requiredPhotosOk()){alert('Faça as 6 fotos obrigatórias antes de salvar a vistoria.');return}const btn=document.querySelector('.primary[onclick="salvar()"]');if(btn){btn.classList.add('saving');btn.textContent='ENVIANDO...'}try{const {data:{user}}=await supabase.auth.getUser();if(!user)throw new Error('Sessão expirada. Entre novamente.');const id=crypto.randomUUID();const fotos=await uploadPhotos(id);const dados={id,empresa,nfe,crt:getFormData('crt'),filhote:getFormData('filhote'),motorista,placa:getFormData('placa'),lacre:getFormData('lacre'),tipo:getFormData('tipo'),produto:getFormData('produto'),lote:getFormData('lote'),validade:getFormData('validade')||null,colaborador:getFormData('colaborador'),tecnico:getFormData('tecnico'),data:getFormData('data')||null,hora:getFormData('hora')||null,status:getFormData('statusVistoria'),volumes:Number(getFormData('volumes')||0),obs:getFormData('obs'),fotos,salvo_em:new Date().toISOString(),criado_por:user.id};const {error}=await supabase.from('vistorias').insert(dados);if(error)throw error;const st=document.getElementById('status');st.textContent='✓ Vistoria enviada para o Supabase em '+new Date().toLocaleString('pt-BR');st.style.display='block';atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(error){console.error(error);alert('Não foi possível salvar: '+error.message)}finally{if(btn){btn.classList.remove('saving');btn.textContent='SALVAR VISTORIA'}}}
+async function getRegistros(){const {data,error}=await supabase.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
+async function atualizarDashboard(){const r=await getRegistros(),c=s=>r.filter(x=>x.status===s).length;document.getElementById('metricTotal').textContent=r.length;document.getElementById('metricAguardando').textContent=c('Aguardando análise');document.getElementById('metricLiberadas').textContent=c('Liberado');document.getElementById('metricPendentes').textContent=c('Pendente')+c('Não conforme')}
+async function renderRegistros(){const box=document.getElementById('listaRegistros');if(!box)return;box.innerHTML='<div class="records-empty">Carregando...</div>';const q=(document.getElementById('buscaRegistros')?.value||'').toLowerCase();const all=await getRegistros();const r=all.filter(x=>!q||[x.empresa,x.nfe,x.motorista,x.placa,x.produto,x.status].some(v=>String(v||'').toLowerCase().includes(q)));if(!r.length){box.className='records-empty';box.textContent='Nenhuma vistoria encontrada.';return}box.className='';box.innerHTML=r.map(x=>`<div style="border:1px solid #dce2e5;border-radius:12px;padding:12px;margin-bottom:9px"><div style="display:flex;justify-content:space-between;gap:8px"><div><strong>${esc(x.empresa)}</strong><div style="font-size:12px;color:#69757c;margin-top:4px">NFE ${esc(x.nfe)} • ${esc(x.motorista)}</div><div style="font-size:11px;color:#69757c;margin-top:3px">${esc(x.placa||'Sem placa')} • ${esc(x.produto||'Sem produto')}</div></div><span style="${stStyle(x.status)}">${esc(x.status)}</span></div><div style="font-size:10px;color:#8a959b;margin-top:8px">${esc(x.salvo_em?new Date(x.salvo_em).toLocaleString('pt-BR'):'')}</div><div class="record-actions"><button type="button" onclick="verFotos('${x.id}')">📷 ${Array.isArray(x.fotos)?x.fotos.length:0} FOTOS</button></div></div>`).join('')}
+async function verFotos(id){const {data,error}=await supabase.from('vistorias').select('empresa,nfe,fotos').eq('id',id).single();if(error){alert(error.message);return}const fotos=Array.isArray(data.fotos)?data.fotos:[];if(!fotos.length){alert('Esta vistoria não possui fotos.');return}const paths=fotos.map(x=>x.path);const {data:urls,error:e}=await supabase.storage.from(BUCKET).createSignedUrls(paths,3600);if(e){alert('Não foi possível abrir as fotos: '+e.message);return}document.getElementById('galleryTitle').textContent=`Fotos • ${data.empresa} • NFE ${data.nfe}`;document.getElementById('galleryGrid').innerHTML=urls.map((x,i)=>`<img src="${escAttr(x.signedUrl)}" alt="Foto ${i+1}" loading="lazy">`).join('');document.getElementById('photoGallery').style.display='flex'}
+function fecharGaleria(event){if(event&&event.target!==event.currentTarget)return;document.getElementById('photoGallery').style.display='none'}
+function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function escAttr(v){return esc(v).replace(/`/g,'&#096;')}
+function mostrarAba(a,b){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('abaNova').style.display=a==='nova'?'block':'none';document.getElementById('abaRegistros').style.display=a==='registros'?'block':'none';if(a==='registros')renderRegistros()}
+function novoRegistro(){if(confirm('Deseja limpar todos os dados do formulário?'))location.reload()}
+document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);atualizarFotos();
+</script>
+</body>
+</html>
