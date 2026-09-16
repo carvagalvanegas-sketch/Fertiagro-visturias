@@ -102,11 +102,41 @@ function addPhotoCard(key,title,hint,icon,number,extra=false){const grid=documen
 function addMultiPhotoGroup(prefix,title,hint,icon,number){const grid=document.getElementById('photoGrid');const group=document.createElement('div');group.className='multi-photo-group';group.id='photoGroup-'+prefix;grid.appendChild(group);let count=0;const add=()=>{count++;const key=prefix+'-'+count;const label=document.createElement('label');label.className='photo-card';label.id='photoCard-'+key;label.innerHTML=`<div class="photo-card-head"><span class="photo-number">${number}${count>1?'+' :''}</span><span class="photo-check" id="check-${key}">○</span></div><div class="photo-thumb"><span class="camera-icon">${icon}</span><img class="photo-preview" id="prev-${key}"></div><div class="photo-card-title">${title}${count>1?' '+count:''}</div><div class="photo-card-hint">${hint}</div><input type="file" accept="image/*" capture="environment">`;label.querySelector('input').addEventListener('change',e=>preview(e.target,'prev-'+key,key));group.insertBefore(label,group.querySelector('.multi-photo-add'));};add();const btn=document.createElement('button');btn.type='button';btn.className='multi-photo-add';btn.innerHTML='＋ ADICIONAR FOTO';btn.addEventListener('click',e=>{e.preventDefault();add();});group.appendChild(btn)}
 function initPhotos(){addPhotoCard('placa1','Placa dianteira','Obrigatória • toque para fotografar','📷','01');addPhotoCard('placa2','Placa traseira','Obrigatória • toque para fotografar','📷','02');addPhotoCard('carreta','Carreta / veículo','Obrigatória • vista geral','🚛','03');addPhotoCard('lacre','Lacre','Obrigatória • número legível','🔒','04');addMultiPhotoGroup('produto','Produto','Obrigatória • você pode registrar vários ângulos','📦','05');addMultiPhotoGroup('doc','Documento / NF','Obrigatória • você pode registrar várias páginas','📄','06');addPhotoCard('extra-'+(++extraCounter),'Foto adicional','Opcional • registrar detalhe','📸','+ ',true)}
 function addExtraPhoto(){addPhotoCard('extra-'+(++extraCounter),'Foto adicional','Opcional • registrar detalhe','📸','+',true)}
-function preview(input,id,key){if(!input.files||!input.files[0])return;const file=input.files[0];photoFiles[key]=file;const img=document.getElementById(id),card=input.closest('.photo-card'),check=document.getElementById('check-'+key);img.src=URL.createObjectURL(file);img.style.display='block';const icon=card.querySelector('.camera-icon');if(icon)icon.style.display='none';card.classList.add('done');if(check)check.textContent='✓';atualizarFotos();if(key.startsWith('extra-')){setTimeout(()=>{const extras=[...document.querySelectorAll('[id^="photoCard-extra-"]')];if(extras.at(-1)?.querySelector('input')?.files?.length)addExtraPhoto()},50)}}
+async function preview(input,id,key){
+  if(!input.files||!input.files[0])return;
+  const file=input.files[0];
+  const img=document.getElementById(id),card=input.closest('.photo-card'),check=document.getElementById('check-'+key);
+  const st=document.getElementById('status');
+  const oldUrl=img?.dataset?.objectUrl;
+  if(oldUrl)URL.revokeObjectURL(oldUrl);
+  if(st){st.textContent='Processando foto...';st.style.display='block'}
+  input.disabled=true;
+  try{
+    // Comprime imediatamente, antes de guardar a foto. Isso evita acumular arquivos grandes da câmera na memória.
+    const foto=await comprimirFoto(file,1000,0.62);
+    photoFiles[key]=foto;
+    const url=URL.createObjectURL(foto);
+    if(img){img.src=url;img.dataset.objectUrl=url;img.style.display='block'}
+    const icon=card?.querySelector('.camera-icon');if(icon)icon.style.display='none';
+    if(card)card.classList.add('done');
+    if(check)check.textContent='✓';
+    atualizarFotos();
+    // Libera a referência do arquivo original mantida pelo input HTML.
+    input.value='';
+    if(st){st.textContent='';st.style.display='none'}
+    // Mantém a sequência de fotos adicionais sem depender de input.files.
+    if(key.startsWith('extra-'))addExtraPhoto();
+  }catch(e){
+    console.error(e);
+    input.value='';
+    if(st){st.textContent='Erro ao processar a foto.';st.style.display='block'}
+    alert(e.message||'Não foi possível processar a foto.');
+  }finally{input.disabled=false}
+}
 function atualizarFotos(){const total=mandatory.filter(k=>k==='produto'||k==='doc'?Object.keys(photoFiles).some(x=>x.startsWith(k+'-')):!!photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
-async function comprimirFoto(file,maxSize=1200,quality=0.68){
+async function comprimirFoto(file,maxSize=1000,quality=0.62){
   if(!file||!file.type.startsWith('image/')) throw new Error('Arquivo de foto inválido.');
   try{
     const bitmap=await createImageBitmap(file);
@@ -192,8 +222,22 @@ const photoNames={placa1:'Placa dianteira',placa2:'Placa traseira',carreta:'Fren
 function nomeFoto(f,i){if(f?.nome_exibicao)return f.nome_exibicao;if(f?.key&&photoNames[f.key])return photoNames[f.key];if(f?.key?.startsWith('extra-'))return 'Foto adicional '+f.key.replace('extra-','');return 'Foto '+String(i+1).padStart(2,'0')}
 function campoEdit(label,id,value,type='text',full=false){const manualDate=['data','fabricacao','validade'].includes(id);const attrs=manualDate?' inputmode="numeric" maxlength="10" placeholder="DD/MM/AAAA"':'';return `<div class="${full?'full':''}"><label>${label}</label>${type==='textarea'?`<textarea id="edit-${id}">${esc(value||'')}</textarea>`:`<input id="edit-${id}" type="text"${attrs} value="${esc(value||'')}">`}</div>`}
 function abrirEdicao(id){const row=document.getElementById('rec-'+id);if(!row)return;const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;row.classList.add('open');row.querySelector('.record-details').innerHTML=`<div class="edit-title">EDITAR VISTORIA</div><div class="record-edit-grid">${campoEdit('Empresa','empresa',r.empresa)}${campoEdit('NFE','nfe',r.nfe)}${campoEdit('CRT','crt',r.crt)}${campoEdit('Filhote','filhote',r.filhote)}${campoEdit('Motorista','motorista',r.motorista)}${campoEdit('Placa','placa',r.placa)}${campoEdit('Lacre','lacre',r.lacre)}<div><label>Tipo de carga</label><select id="edit-tipo">${['Vegetal','Animal','Perigosa','Outra'].map(o=>`<option ${r.tipo===o?'selected':''}>${o}</option>`).join('')}</select></div>${campoEdit('Produto','produto',r.produto)}${campoEdit('Lote','lote',r.lote)}${campoEdit('Data de fabricação','fabricacao',isoParaDataBR(r.fabricacao))}${campoEdit('Data de validade','validade',isoParaDataBR(r.validade))}${campoEdit('Colaborador','colaborador',r.colaborador)}${campoEdit('Técnico','tecnico',r.tecnico)}${campoEdit('Data','data',isoParaDataBR(r.data))}${campoEdit('Horário','hora',r.hora,'time')}<div><label>Status</label><select id="edit-status">${['Aguardando análise','Liberado','Pendente','Não conforme'].map(o=>`<option ${r.status===o?'selected':''}>${o}</option>`).join('')}</select></div>${campoEdit('Quantidade de volumes','volumes',r.volumes,'number')}${campoEdit('Observações / ocorrências','obs',r.obs,'textarea',true)}</div><div class="photo-edit-section"><h3>FOTOS DA VISTORIA</h3><div class="photo-edit-list">${(Array.isArray(r.fotos)?r.fotos:[]).map((f,i)=>`<div class="photo-edit-row"><button class="photo-edit-view" type="button" onclick="abrirFoto('${esc(f.url||'')}')">📷 ${esc(nomeFoto(f,i))}</button><div class="record-photo-edit"><label>SUBSTITUIR<input type="file" accept="image/*" capture="environment" onchange="selecionarFotoEdicao(this,'${esc(id)}',${i})"></label></div></div>`).join('')||'<small>Nenhuma foto registrada.</small>'}</div><label class="record-photo-add">＋ ADICIONAR FOTO<input type="file" accept="image/*" capture="environment" multiple onchange="adicionarFotosEdicao(this,'${esc(id)}')"></label></div><div class="record-actions"><button type="button" onclick="cancelarEdicao('${esc(id)}')">CANCELAR</button><button type="button" class="edit-btn" onclick="salvarEdicao('${esc(id)}')">SALVAR ALTERAÇÕES</button></div>`;['edit-crt','edit-nfe','edit-data','edit-fabricacao','edit-validade'].forEach(id=>{const el=document.getElementById(id);if(!el)return;if(id==='edit-crt')el.addEventListener('input',()=>el.value=formatarCRT(el.value));else if(id==='edit-nfe')el.addEventListener('input',()=>el.value=formatarNFE(el.value));else el.addEventListener('input',()=>el.value=formatarDataBR(el.value))});window._hatiPhotoEdits={};window._hatiNewPhotos=[];}
-function selecionarFotoEdicao(input,id,index){if(!input.files?.[0])return;window._hatiPhotoEdits=window._hatiPhotoEdits||{};window._hatiPhotoEdits[index]=input.files[0];input.parentElement.firstChild.nodeValue='✓ NOVA FOTO';}
-function adicionarFotosEdicao(input,id){if(!input.files?.length)return;window._hatiNewPhotos=window._hatiNewPhotos||[];window._hatiNewPhotos.push(...Array.from(input.files));input.parentElement.firstChild.nodeValue='✓ '+window._hatiNewPhotos.length+' NOVA(S) FOTO(S)';}
+async function selecionarFotoEdicao(input,id,index){
+  if(!input.files?.[0])return;
+  const original=input.files[0];
+  input.disabled=true;
+  try{window._hatiPhotoEdits=window._hatiPhotoEdits||{};window._hatiPhotoEdits[index]=await comprimirFoto(original,1000,0.62);input.value='';input.parentElement.firstChild.nodeValue='✓ NOVA FOTO';}
+  catch(e){input.value='';alert(e.message||'Não foi possível processar a foto.')}
+  finally{input.disabled=false}
+}
+async function adicionarFotosEdicao(input,id){
+  if(!input.files?.length)return;
+  const originais=Array.from(input.files);
+  input.disabled=true;
+  try{window._hatiNewPhotos=window._hatiNewPhotos||[];for(const original of originais)window._hatiNewPhotos.push(await comprimirFoto(original,1000,0.62));input.value='';input.parentElement.firstChild.nodeValue='✓ '+window._hatiNewPhotos.length+' NOVA(S) FOTO(S)';}
+  catch(e){input.value='';alert(e.message||'Não foi possível processar uma das fotos.')}
+  finally{input.disabled=false}
+}
 async function alterarStatus(id,selectEl){const novo=selectEl?.value;if(!id||!novo)return;const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const anterior=r.status;selectEl.disabled=true;try{const {error}=await sb.from('vistorias').update({status:novo}).eq('id',id);if(error)throw error;r.status=novo;const row=document.getElementById('rec-'+id);const badge=row?.querySelector('.record-status');if(badge){badge.textContent=novo;badge.setAttribute('style',statusBadgeStyle(novo));}const detailStatus=row?.querySelector('.record-current-status');if(detailStatus)detailStatus.textContent=novo;await atualizarDashboard();}catch(e){console.error(e);selectEl.value=anterior||'';alert('Erro ao alterar o status: '+(e.message||'verifique as políticas do Supabase.'));}finally{selectEl.disabled=false}}
 function statusBadgeStyle(s){if(s==='Liberado')return'background:#e5f3eb;color:#17633e';if(s==='Aguardando análise')return'background:#fff6d9;color:#8d6a08';if(s==='Pendente'||s==='Não conforme')return'background:#f9e8e6;color:#a23f39';return'background:#e8f1fb;color:#2d619a'}
 function cancelarEdicao(id){renderRegistros();}
