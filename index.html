@@ -14,7 +14,50 @@ function preview(input,id,key){if(!input.files||!input.files[0])return;const fil
 function atualizarFotos(){const total=mandatory.filter(k=>photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
-async function uploadFotos(vistoriaId){const fotos=[];for(const [key,file] of Object.entries(photoFiles)){if(!file)continue;const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const path=`${vistoriaId}/${Date.now()}_${key}_${safe}`;const {error}=await sb.storage.from('vistorias-fotos').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg'});if(error)throw error;const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);fotos.push({key,nome:file.name,path,url:data.publicUrl})}return fotos}
+async function comprimirFoto(file,maxSize=1600,quality=0.78){
+  if(!file||!file.type.startsWith('image/')) throw new Error('Arquivo de foto inválido.');
+  try{
+    const bitmap=await createImageBitmap(file);
+    const scale=Math.min(1,maxSize/Math.max(bitmap.width,bitmap.height));
+    const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
+    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d',{alpha:false}); ctx.drawImage(bitmap,0,0,w,h); bitmap.close();
+    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível processar a foto.')),'image/jpeg',quality));
+    return new File([blob],(file.name||'foto').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
+  }catch(e){
+    console.warn('Falha ao processar foto:',e);
+    throw new Error('Não foi possível processar uma das fotos. Tire a foto novamente usando a câmera do celular.');
+  }
+}
+async function uploadOne(path,file,tries=3){
+  let last;
+  for(let i=1;i<=tries;i++){
+    const result=await sb.storage.from('vistorias-fotos').upload(path,file,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});
+    if(!result.error)return;
+    last=result.error;
+    await new Promise(r=>setTimeout(r,700*i));
+  }
+  throw last||new Error('Falha no envio da foto.');
+}
+async function uploadFotos(vistoriaId){
+  const entries=Object.entries(photoFiles).filter(([,file])=>file);
+  const st=document.getElementById('status');
+  const resultados=[]; let enviados=0;
+  // Dois envios por vez: bom equilíbrio entre velocidade e estabilidade no celular.
+  for(let i=0;i<entries.length;i+=2){
+    const lote=entries.slice(i,i+2);
+    const saidas=await Promise.all(lote.map(async([key,file])=>{
+      const foto=await comprimirFoto(file);
+      const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;
+      await uploadOne(path,foto,3);
+      const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);
+      return {key,nome:file.name,path,url:data.publicUrl};
+    }));
+    resultados.push(...saidas); enviados+=saidas.length;
+    if(st)st.textContent=`Enviando fotos... ${enviados}/${entries.length}`;
+  }
+  return resultados;
+}
 async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=document.getElementById('nfe').value.trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(mandatory.some(k=>!photoFiles[k])){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=crypto.randomUUID();const st=document.getElementById('status');st.textContent='Salvando vistoria e enviando fotos...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:document.getElementById('crt').value,filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,validade:document.getElementById('validade').value||null,colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:document.getElementById('data').value||null,hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';photoFilesClear();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
 function photoFilesClear(){for(const k of Object.keys(photoFiles))delete photoFiles[k];document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
 async function getRegistros(){const {data,error}=await sb.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
