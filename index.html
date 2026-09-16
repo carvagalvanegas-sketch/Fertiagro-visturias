@@ -61,7 +61,10 @@ const SUPABASE_URL='https://eqcyzbkbiodaxuywfqwp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u9r4nq1uz7k5fiBM-MRyfQ_zwJJy2n8';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const mandatory=['placa1','placa2','carreta','lacre','produto','doc'];
+// As fotos são enviadas ao Supabase imediatamente para não acumular arquivos
+// grandes da câmera na memória do Android. Guardamos apenas os metadados/URLs.
 const photoFiles={};
+let vistoriaIdAtual=crypto.randomUUID();
 let extraCounter=0;const produtosDisponiveis=[
   'FARELO','AÇÚCAR','MARGARINA','ÓLEO DEGOMADO','ÓLEO INDUSTRIALIZADO','ÓLEO REFINADO',
   'TRIGO','FEIJÃO','SEMENTES DE CAPIM','SEMENTES DE MILHO','POLINUTRI','MUDAS DE PLANTAS',
@@ -107,31 +110,44 @@ async function preview(input,id,key){
   const file=input.files[0];
   const img=document.getElementById(id),card=input.closest('.photo-card'),check=document.getElementById('check-'+key);
   const st=document.getElementById('status');
-  const oldUrl=img?.dataset?.objectUrl;
-  if(oldUrl)URL.revokeObjectURL(oldUrl);
-  if(st){st.textContent='Processando foto...';st.style.display='block'}
+  if(st){st.textContent='Enviando foto...';st.style.display='block'}
   input.disabled=true;
   try{
-    // Comprime imediatamente, antes de guardar a foto. Isso evita acumular arquivos grandes da câmera na memória.
-    const foto=await comprimirFoto(file,1000,0.62);
+    // NÃO decodifica nem comprime a foto no navegador. A foto original vai
+    // direto para o Storage, evitando o pico de memória causado por
+    // createImageBitmap/canvas em câmeras de alta resolução.
+    const foto=await uploadFotoDireta(vistoriaIdAtual,key,file);
     photoFiles[key]=foto;
-    const url=URL.createObjectURL(foto);
-    if(img){img.src=url;img.dataset.objectUrl=url;img.style.display='block'}
+    if(img){
+      img.src=foto.previewUrl||foto.url;
+      img.style.display='block';
+      img.removeAttribute('data-object-url');
+    }
     const icon=card?.querySelector('.camera-icon');if(icon)icon.style.display='none';
     if(card)card.classList.add('done');
     if(check)check.textContent='✓';
     atualizarFotos();
-    // Libera a referência do arquivo original mantida pelo input HTML.
+    // Libera imediatamente a referência do arquivo mantida pelo input.
     input.value='';
     if(st){st.textContent='';st.style.display='none'}
-    // Mantém a sequência de fotos adicionais sem depender de input.files.
     if(key.startsWith('extra-'))addExtraPhoto();
   }catch(e){
     console.error(e);
     input.value='';
-    if(st){st.textContent='Erro ao processar a foto.';st.style.display='block'}
-    alert(e.message||'Não foi possível processar a foto.');
+    if(st){st.textContent='Erro ao enviar a foto.';st.style.display='block'}
+    alert('Não foi possível enviar a foto. Verifique a conexão e tente novamente.');
   }finally{input.disabled=false}
+}
+async function uploadFotoDireta(vistoriaId,key,file){
+  if(!file||!file.type.startsWith('image/'))throw new Error('Arquivo de foto inválido.');
+  const ext=(file.name||'foto').match(/\.([a-z0-9]+)$/i)?.[1]?.toLowerCase()||'jpg';
+  const safeExt=['jpg','jpeg','png','webp','heic','heif'].includes(ext)?ext:'jpg';
+  const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.${safeExt}`;
+  const result=await sb.storage.from('vistorias-fotos').upload(path,file,{upsert:false,contentType:file.type||'image/jpeg',cacheControl:'31536000'});
+  if(result.error)throw result.error;
+  const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);
+  const previewUrl=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:900,height:900,resize:'contain',quality:55}})?.data?.publicUrl||data.publicUrl;
+  return {key,nome:file.name,path,url:data.publicUrl,previewUrl};
 }
 function atualizarFotos(){const total=mandatory.filter(k=>k==='produto'||k==='doc'?Object.keys(photoFiles).some(x=>x.startsWith(k+'-')):!!photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -162,23 +178,9 @@ async function uploadOne(path,file,tries=3){
   throw last||new Error('Falha no envio da foto.');
 }
 async function uploadFotos(vistoriaId){
-  const entries=Object.entries(photoFiles).filter(([,file])=>file);
-  const st=document.getElementById('status');
-  const resultados=[]; let enviados=0;
-  // Dois envios por vez: bom equilíbrio entre velocidade e estabilidade no celular.
-  for(let i=0;i<entries.length;i+=2){
-    const lote=entries.slice(i,i+2);
-    const saidas=await Promise.all(lote.map(async([key,file])=>{
-      const foto=await comprimirFoto(file);
-      const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;
-      await uploadOne(path,foto,3);
-      const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);
-      return {key,nome:file.name,path,url:data.publicUrl};
-    }));
-    resultados.push(...saidas); enviados+=saidas.length;
-    if(st)st.textContent=`Enviando fotos... ${enviados}/${entries.length}`;
-  }
-  return resultados;
+  // Compatibilidade com o fluxo antigo: as fotos já foram enviadas
+  // individualmente no momento em que foram tiradas.
+  return Object.values(photoFiles).filter(f=>f&&f.url);
 }
 function formatarCRT(v){
   let d=String(v||'').toUpperCase().replace(/[^0-9]/g,'').slice(0,9);
@@ -210,7 +212,7 @@ function configurarFormatosFormulario(){
   if(nfe)nfe.addEventListener('input',()=>{nfe.value=formatarNFE(nfe.value)});
   ['fabricacao','validade','data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{el.value=formatarDataBR(el.value)})});
 }
-async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!photoFiles.lacre||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=crypto.randomUUID();const st=document.getElementById('status');st.textContent='Salvando vistoria e enviando fotos...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:formatarCRT(document.getElementById('crt').value),filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,fabricacao:dataBRparaISO(document.getElementById('fabricacao').value),validade:dataBRparaISO(document.getElementById('validade').value),colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:dataBRparaISO(document.getElementById('data').value),hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';photoFilesClear();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
+async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!photoFiles.lacre||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=vistoriaIdAtual;const st=document.getElementById('status');st.textContent='Salvando vistoria...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:formatarCRT(document.getElementById('crt').value),filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,fabricacao:dataBRparaISO(document.getElementById('fabricacao').value),validade:dataBRparaISO(document.getElementById('validade').value),colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:dataBRparaISO(document.getElementById('data').value),hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';photoFilesClear();vistoriaIdAtual=crypto.randomUUID();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
 function photoFilesClear(){for(const k of Object.keys(photoFiles))delete photoFiles[k];document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
 async function getRegistros(){const {data,error}=await sb.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
 async function atualizarDashboard(){const r=await getRegistros(),c=s=>r.filter(x=>x.status===s).length;document.getElementById('metricTotal').textContent=r.length;document.getElementById('metricAguardando').textContent=c('Aguardando análise');document.getElementById('metricLiberadas').textContent=c('Liberado');document.getElementById('metricPendentes').textContent=c('Pendente')+c('Não conforme')}
@@ -226,7 +228,7 @@ async function selecionarFotoEdicao(input,id,index){
   if(!input.files?.[0])return;
   const original=input.files[0];
   input.disabled=true;
-  try{window._hatiPhotoEdits=window._hatiPhotoEdits||{};window._hatiPhotoEdits[index]=await comprimirFoto(original,1000,0.62);input.value='';input.parentElement.firstChild.nodeValue='✓ NOVA FOTO';}
+  try{window._hatiPhotoEdits=window._hatiPhotoEdits||{};window._hatiPhotoEdits[index]=original;input.value='';input.parentElement.firstChild.nodeValue='✓ NOVA FOTO';}
   catch(e){input.value='';alert(e.message||'Não foi possível processar a foto.')}
   finally{input.disabled=false}
 }
@@ -234,14 +236,14 @@ async function adicionarFotosEdicao(input,id){
   if(!input.files?.length)return;
   const originais=Array.from(input.files);
   input.disabled=true;
-  try{window._hatiNewPhotos=window._hatiNewPhotos||[];for(const original of originais)window._hatiNewPhotos.push(await comprimirFoto(original,1000,0.62));input.value='';input.parentElement.firstChild.nodeValue='✓ '+window._hatiNewPhotos.length+' NOVA(S) FOTO(S)';}
+  try{window._hatiNewPhotos=window._hatiNewPhotos||[];for(const original of originais)window._hatiNewPhotos.push(original);input.value='';input.parentElement.firstChild.nodeValue='✓ '+window._hatiNewPhotos.length+' NOVA(S) FOTO(S)';}
   catch(e){input.value='';alert(e.message||'Não foi possível processar uma das fotos.')}
   finally{input.disabled=false}
 }
 async function alterarStatus(id,selectEl){const novo=selectEl?.value;if(!id||!novo)return;const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const anterior=r.status;selectEl.disabled=true;try{const {error}=await sb.from('vistorias').update({status:novo}).eq('id',id);if(error)throw error;r.status=novo;const row=document.getElementById('rec-'+id);const badge=row?.querySelector('.record-status');if(badge){badge.textContent=novo;badge.setAttribute('style',statusBadgeStyle(novo));}const detailStatus=row?.querySelector('.record-current-status');if(detailStatus)detailStatus.textContent=novo;await atualizarDashboard();}catch(e){console.error(e);selectEl.value=anterior||'';alert('Erro ao alterar o status: '+(e.message||'verifique as políticas do Supabase.'));}finally{selectEl.disabled=false}}
 function statusBadgeStyle(s){if(s==='Liberado')return'background:#e5f3eb;color:#17633e';if(s==='Aguardando análise')return'background:#fff6d9;color:#8d6a08';if(s==='Pendente'||s==='Não conforme')return'background:#f9e8e6;color:#a23f39';return'background:#e8f1fb;color:#2d619a'}
 function cancelarEdicao(id){renderRegistros();}
-async function salvarEdicao(id){const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const st=document.getElementById('status');st.textContent='Salvando alterações...';st.style.display='block';try{const editNfe=formatarNFE(document.getElementById('edit-nfe').value),editCrt=formatarCRT(document.getElementById('edit-crt').value);if(!editNfe){alert('Informe o número da NFE.');return}const dados={empresa:document.getElementById('edit-empresa').value.trim(),nfe:editNfe,crt:editCrt,filhote:document.getElementById('edit-filhote').value,motorista:document.getElementById('edit-motorista').value.trim(),placa:document.getElementById('edit-placa').value, lacre:document.getElementById('edit-lacre').value,tipo:document.getElementById('edit-tipo').value,produto:document.getElementById('edit-produto').value,lote:document.getElementById('edit-lote').value,fabricacao:dataBRparaISO(document.getElementById('edit-fabricacao').value),validade:dataBRparaISO(document.getElementById('edit-validade').value),colaborador:document.getElementById('edit-colaborador').value,tecnico:document.getElementById('edit-tecnico').value,data:dataBRparaISO(document.getElementById('edit-data').value),hora:document.getElementById('edit-hora').value||null,status:document.getElementById('edit-status').value,volumes:Number(document.getElementById('edit-volumes').value||0),obs:document.getElementById('edit-obs').value};let fotos=Array.isArray(r.fotos)?r.fotos.map(x=>({...x})):[];const edits=window._hatiPhotoEdits||{};for(const [idx,file] of Object.entries(edits)){const i=Number(idx);const foto=await comprimirFoto(file);const path=`${id}/${crypto.randomUUID()}_${fotos[i]?.key||'foto'}.jpg`;await uploadOne(path,foto,3);const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);if(fotos[i]?.path)await sb.storage.from('vistorias-fotos').remove([fotos[i].path]);fotos[i]={...(fotos[i]||{}),key:fotos[i]?.key||'foto',nome:file.name,path,url:data.publicUrl,nome_exibicao:nomeFoto(fotos[i]||{},i)}}for(const file of (window._hatiNewPhotos||[])){const foto=await comprimirFoto(file);const key='extra-'+crypto.randomUUID();const path=`${id}/${crypto.randomUUID()}_${key}.jpg`;await uploadOne(path,foto,3);const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);fotos.push({key,nome:file.name,path,url:data.publicUrl,nome_exibicao:'Foto adicional'})}dados.fotos=fotos;const {error}=await sb.from('vistorias').update(dados).eq('id',id);if(error)throw error;st.textContent='✓ Vistoria atualizada.';window._hatiPhotoEdits={};window._hatiNewPhotos=[];await atualizarDashboard();await renderRegistros();}catch(e){console.error(e);st.textContent='Erro ao editar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
+async function salvarEdicao(id){const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const st=document.getElementById('status');st.textContent='Salvando alterações...';st.style.display='block';try{const editNfe=formatarNFE(document.getElementById('edit-nfe').value),editCrt=formatarCRT(document.getElementById('edit-crt').value);if(!editNfe){alert('Informe o número da NFE.');return}const dados={empresa:document.getElementById('edit-empresa').value.trim(),nfe:editNfe,crt:editCrt,filhote:document.getElementById('edit-filhote').value,motorista:document.getElementById('edit-motorista').value.trim(),placa:document.getElementById('edit-placa').value, lacre:document.getElementById('edit-lacre').value,tipo:document.getElementById('edit-tipo').value,produto:document.getElementById('edit-produto').value,lote:document.getElementById('edit-lote').value,fabricacao:dataBRparaISO(document.getElementById('edit-fabricacao').value),validade:dataBRparaISO(document.getElementById('edit-validade').value),colaborador:document.getElementById('edit-colaborador').value,tecnico:document.getElementById('edit-tecnico').value,data:dataBRparaISO(document.getElementById('edit-data').value),hora:document.getElementById('edit-hora').value||null,status:document.getElementById('edit-status').value,volumes:Number(document.getElementById('edit-volumes').value||0),obs:document.getElementById('edit-obs').value};let fotos=Array.isArray(r.fotos)?r.fotos.map(x=>({...x})):[];const edits=window._hatiPhotoEdits||{};for(const [idx,file] of Object.entries(edits)){const i=Number(idx);const novaFoto=await uploadFotoDireta(id,fotos[i]?.key||'foto',file);if(fotos[i]?.path)await sb.storage.from('vistorias-fotos').remove([fotos[i].path]);fotos[i]={...(fotos[i]||{}),...novaFoto,key:fotos[i]?.key||'foto',nome_exibicao:nomeFoto(fotos[i]||{},i)}}for(const file of (window._hatiNewPhotos||[])){const key='extra-'+crypto.randomUUID();const novaFoto=await uploadFotoDireta(id,key,file);fotos.push({...novaFoto,key,nome_exibicao:'Foto adicional'})}dados.fotos=fotos;const {error}=await sb.from('vistorias').update(dados).eq('id',id);if(error)throw error;st.textContent='✓ Vistoria atualizada.';window._hatiPhotoEdits={};window._hatiNewPhotos=[];await atualizarDashboard();await renderRegistros();}catch(e){console.error(e);st.textContent='Erro ao editar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
 async function renderRegistros(){
   const box=document.getElementById('listaRegistros');
   if(!box)return;
