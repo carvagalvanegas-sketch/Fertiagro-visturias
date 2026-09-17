@@ -473,15 +473,15 @@ async function criarImagemWhatsApp(r){
   const bubbleX=38;
   const bubbleW=W-76;
   const linhasTexto=[
-    `® EMPRESA: ${r.empresa||'-'}`,
-    `® NFE: ${r.nfe||'-'}`,
-    `® CRT: ${r.crt||'-'}`,
-    `® MOTORISTA: ${r.motorista||'-'}`,
-    `® PLACA: ${r.placa||'-'}`,
-    `® LACRE: ${r.lacre||''}`,
-    `® VISTORIADO POR: ${r.colaborador||'-'}`,
-    `® TÉCNICO: ${r.tecnico||'-'}`,
-    `® HORA DA INSPEÇÃO: ${r.hora||'-'}`
+    `EMPRESA: ${r.empresa||'-'}`,
+    `NFE: ${r.nfe||'-'}`,
+    `CRT: ${r.crt||'-'}`,
+    `MOTORISTA: ${r.motorista||'-'}`,
+    `PLACA: ${r.placa||'-'}`,
+    `LACRE: ${r.lacre||''}`,
+    `VISTORIADO POR: ${r.colaborador||'-'}`,
+    `TÉCNICO: ${r.tecnico||'-'}`,
+    `HORA DA INSPEÇÃO: ${r.hora||'-'}`
   ];
 
   const ctxTemp=document.createElement('canvas').getContext('2d');
