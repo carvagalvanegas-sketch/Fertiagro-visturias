@@ -72,7 +72,73 @@ const mandatory=['placa1','placa2','carreta','lacre','produto','doc'];
 // grandes da câmera na memória do Android. Guardamos apenas os metadados/URLs.
 const photoFiles={};
 let vistoriaIdAtual=crypto.randomUUID();
-let extraCounter=0;const produtosDisponiveis=[
+let extraCounter=0;
+const DRAFT_KEY='hati_vistoria_em_andamento_v1';
+let restaurandoRascunho=false;
+function dadosFormularioRascunho(){
+  const dados={};
+  document.querySelectorAll('input,select,textarea').forEach(el=>{
+    if(!el.id || el.type==='file')return;
+    if(el.id.startsWith('edit-') || el.id.includes('Picker'))return;
+    dados[el.id]=el.value;
+  });
+  return dados;
+}
+function salvarRascunho(){
+  if(restaurandoRascunho)return;
+  try{
+    const fotos={};
+    Object.entries(photoFiles).forEach(([key,f])=>{
+      if(f)fotos[key]={key:f.key||key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||''};
+    });
+    localStorage.setItem(DRAFT_KEY,JSON.stringify({versao:1,id:vistoriaIdAtual,campos:dadosFormularioRascunho(),fotos,salvoEm:new Date().toISOString()}));
+  }catch(e){console.warn('Não foi possível guardar o rascunho:',e)}
+}
+function apagarRascunho(){try{localStorage.removeItem(DRAFT_KEY)}catch(e){}}
+function restaurarCartoesFoto(keys){
+  const grupos=[['lacre','photoGroup-lacre'],['produto','photoGroup-produto'],['doc','photoGroup-doc']];
+  grupos.forEach(([prefix,id])=>{
+    const max=Math.max(1,...keys.filter(k=>k.startsWith(prefix+'-')).map(k=>parseInt(k.split('-')[1],10)||1));
+    const group=document.getElementById(id),btn=group?.querySelector('.multi-photo-add');
+    let atual=group?.querySelectorAll('.photo-card').length||0;
+    while(btn && atual<max){btn.click();atual++}
+  });
+  const extras=keys.filter(k=>k.startsWith('extra-')).map(k=>parseInt(k.split('-')[1],10)||0);
+  if(extras.length){
+    const maxExtra=Math.max(...extras); extraCounter=Math.max(extraCounter,maxExtra);
+    while(document.querySelectorAll('.photo-card-extra').length<maxExtra)addExtraPhoto();
+  }
+}
+function restaurarRascunho(){
+  try{
+    const raw=localStorage.getItem(DRAFT_KEY); if(!raw)return false;
+    const draft=JSON.parse(raw); if(!draft||!draft.campos)return false;
+    const quando=draft.salvoEm?new Date(draft.salvoEm).toLocaleString('pt-BR'):'';
+    if(!confirm('Foi encontrada uma vistoria em andamento'+(quando?' de '+quando:'')+'.\n\nDeseja continuar de onde parou?\n\nEscolha CANCELAR para iniciar uma nova vistoria.')){apagarRascunho();return false}
+    restaurandoRascunho=true;
+    vistoriaIdAtual=draft.id||crypto.randomUUID();
+    Object.entries(draft.campos).forEach(([id,val])=>{const el=document.getElementById(id);if(el && el.type!=='file')el.value=val??''});
+    Object.entries(draft.fotos||{}).forEach(([key,f])=>photoFiles[key]=f);
+    restaurarCartoesFoto(Object.keys(photoFiles));
+    Object.entries(photoFiles).forEach(([key,f])=>{
+      const img=document.getElementById('prev-'+key),card=document.getElementById('photoCard-'+key),check=document.getElementById('check-'+key);
+      if(img&&f.url){img.src=f.previewUrl||f.url;img.style.display='block'}
+      if(card&&f.url)card.classList.add('done');
+      if(check&&f.url)check.textContent='✓';
+    });
+    configurarFormatosFormulario();
+    atualizarFotos();
+    restaurandoRascunho=false;
+    return true;
+  }catch(e){console.warn('Falha ao restaurar rascunho:',e);restaurandoRascunho=false;return false}
+}
+function iniciarAutosaveRascunho(){
+  document.querySelectorAll('#abaNova input:not([type="file"]),#abaNova select,#abaNova textarea').forEach(el=>{
+    el.addEventListener('input',salvarRascunho);el.addEventListener('change',salvarRascunho)
+  });
+  window.addEventListener('beforeunload',salvarRascunho);
+}
+const produtosDisponiveis=[
   'FARELO','AÇÚCAR','MARGARINA','ÓLEO DEGOMADO','ÓLEO INDUSTRIALIZADO','ÓLEO REFINADO',
   'TRIGO','FEIJÃO','SEMENTES DE CAPIM','SEMENTES DE MILHO','POLINUTRI','MUDAS DE PLANTAS',
   'COMPOSTO LÁCTEO','MISTURA LÁCTEA','FRANGO','CARNE','OVOS','PESCADO'
@@ -147,9 +213,9 @@ function addMultiPhotoGroup(prefix,title,hint,icon,number){
     const cam=document.createElement('button'); cam.type='button'; cam.className='camera-gallery'; cam.textContent='📷 ABRIR CÂMERA'; cam.onclick=e=>{e.stopPropagation();abrirCamera(key)}; label.appendChild(cam);
     const gal=document.createElement('button'); gal.type='button'; gal.className='camera-gallery'; gal.textContent='🖼️ ESCOLHER DA GALERIA'; gal.onclick=e=>{e.stopPropagation();const input=label.querySelector('input');if(input)input.click()}; label.appendChild(gal); criarInputGaleria(label,key);
     group.insertBefore(label,group.querySelector('.multi-photo-add'));
-  }; add(); const btn=document.createElement('button'); btn.type='button'; btn.className='multi-photo-add'; btn.innerHTML=prefix==='produto'?'＋ ADICIONAR FOTO PRODUTO':'＋ ADICIONAR FOTO DOCUMENTO'; btn.addEventListener('click',e=>{e.preventDefault();add()}); group.appendChild(btn);
+  }; add(); const btn=document.createElement('button'); btn.type='button'; btn.className='multi-photo-add'; btn.innerHTML=prefix==='produto'?'＋ ADICIONAR FOTO PRODUTO':prefix==='doc'?'＋ ADICIONAR FOTO DOCUMENTO':'＋ ADICIONAR FOTO LACRE'; btn.addEventListener('click',e=>{e.preventDefault();add()}); group.appendChild(btn);
 }
-function initPhotos(){addPhotoCard('placa1','Placa dianteira','Obrigatória • toque para fotografar','📷','01');addPhotoCard('placa2','Placa traseira','Obrigatória • toque para fotografar','📷','02');addPhotoCard('carreta','Carreta / veículo','Obrigatória • vista geral','🚛','03');addPhotoCard('lacre','Lacre','Obrigatória • número legível','🔒','04');addMultiPhotoGroup('produto','Produto','Obrigatória • você pode registrar vários ângulos','📦','05');addMultiPhotoGroup('doc','Documento / NF','Obrigatória • você pode registrar várias páginas','📄','06');addPhotoCard('extra-'+(++extraCounter),'Foto adicional','Opcional • registrar detalhe','📸','+ ',true)}
+function initPhotos(){addPhotoCard('placa1','Placa dianteira','Obrigatória • toque para fotografar','📷','01');addPhotoCard('placa2','Placa traseira','Obrigatória • toque para fotografar','📷','02');addPhotoCard('carreta','Carreta / veículo','Obrigatória • vista geral','🚛','03');addMultiPhotoGroup('lacre','Lacre','Obrigatória • número legível • você pode registrar vários lacres','🔒','04');addMultiPhotoGroup('produto','Produto','Obrigatória • você pode registrar vários ângulos','📦','05');addMultiPhotoGroup('doc','Documento / NF','Obrigatória • você pode registrar várias páginas','📄','06');addPhotoCard('extra-'+(++extraCounter),'Foto adicional','Opcional • registrar detalhe','📸','+ ',true)}
 function addExtraPhoto(){addPhotoCard('extra-'+(++extraCounter),'Foto adicional','Opcional • registrar detalhe','📸','+',true)}
 let cameraStream=null,cameraKey=null;
 async function abrirCamera(key){
@@ -211,6 +277,7 @@ async function processarFoto(file,key,fromCamera=false){
     card?.classList.add('done'); if(check)check.textContent='✓'; atualizarFotos();
     if(key.startsWith('extra-'))addExtraPhoto();
     if(st){st.textContent='';st.style.display='none'}
+    salvarRascunho();
   }catch(e){console.error(e);if(st){st.textContent='';st.style.display='none'}if(e.message==='Recorte cancelado.'){if(fromCamera){setTimeout(()=>abrirCamera(key),120);}}else{alert('Não foi possível processar a foto: '+(e.message||'verifique a conexão.'))}}
 }
 async function excluirFoto(key,event){
@@ -231,9 +298,9 @@ async function excluirFoto(key,event){
     if(check)check.textContent='○';
     if(card)card.classList.remove('done');
 
-    // Para fotos adicionais de Produto/Documento, remove o cartão extra.
+    // Para fotos adicionais de Lacre/Produto/Documento, remove o cartão extra.
     // O primeiro cartão permanece para permitir registrar uma nova foto.
-    if(card && (key.startsWith('produto-')||key.startsWith('doc-'))){
+    if(card && (key.startsWith('lacre-')||key.startsWith('produto-')||key.startsWith('doc-'))){
       const group=card.parentElement;
       const cards=group?.querySelectorAll('.photo-card')||[];
       if(cards.length>1)card.remove();
@@ -241,13 +308,14 @@ async function excluirFoto(key,event){
       card.remove();
     }
     atualizarFotos();
+    salvarRascunho();
   }catch(e){
     console.error(e);
     alert('Não foi possível excluir a foto: '+(e.message||'verifique a conexão.'));
   }
 }
 async function uploadFotoDireta(vistoriaId,key,file){if(!file||!file.type.startsWith('image/'))throw new Error('Arquivo de foto inválido.');const foto=file.size>1400*1024?await comprimirFoto(file,1280,0.68):file;const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;const result=await sb.storage.from('vistorias-fotos').upload(path,foto,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});if(result.error)throw result.error;const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);const previewUrl=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:900,height:900,resize:'contain',quality:55}})?.data?.publicUrl||data.publicUrl;return {key,nome:file.name,path,url:data.publicUrl,previewUrl};}
-function atualizarFotos(){const total=mandatory.filter(k=>k==='produto'||k==='doc'?Object.keys(photoFiles).some(x=>x.startsWith(k+'-')):!!photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
+function atualizarFotos(){const total=mandatory.filter(k=>k==='produto'||k==='doc'||k==='lacre'?Object.keys(photoFiles).some(x=>x.startsWith(k+'-')):!!photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
 async function comprimirFoto(file,maxSize=1000,quality=0.62){
@@ -310,7 +378,7 @@ function configurarFormatosFormulario(){
   if(nfe)nfe.addEventListener('input',()=>{nfe.value=formatarNFE(nfe.value)});
   ['fabricacao','validade','data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{el.value=formatarDataBR(el.value)})});
 }
-async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!photoFiles.lacre||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=vistoriaIdAtual;const st=document.getElementById('status');st.textContent='Salvando vistoria...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:formatarCRT(document.getElementById('crt').value),filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,fabricacao:dataBRparaISO(document.getElementById('fabricacao').value),validade:dataBRparaISO(document.getElementById('validade').value),colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:dataBRparaISO(document.getElementById('data').value),hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';photoFilesClear();vistoriaIdAtual=crypto.randomUUID();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
+async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!Object.keys(photoFiles).some(k=>k.startsWith('lacre-'))||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=vistoriaIdAtual;const st=document.getElementById('status');st.textContent='Salvando vistoria...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:formatarCRT(document.getElementById('crt').value),filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,fabricacao:dataBRparaISO(document.getElementById('fabricacao').value),validade:dataBRparaISO(document.getElementById('validade').value),colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:dataBRparaISO(document.getElementById('data').value),hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';apagarRascunho();photoFilesClear();vistoriaIdAtual=crypto.randomUUID();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
 function photoFilesClear(){for(const k of Object.keys(photoFiles))delete photoFiles[k];document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
 async function getRegistros(){const {data,error}=await sb.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
 async function atualizarDashboard(){const r=await getRegistros(),c=s=>r.filter(x=>x.status===s).length;document.getElementById('metricTotal').textContent=r.length;document.getElementById('metricAguardando').textContent=c('Aguardando análise');document.getElementById('metricLiberadas').textContent=c('Liberado');document.getElementById('metricPendentes').textContent=c('Pendente')+c('Não conforme')}
@@ -659,6 +727,6 @@ function mostrarAba(a,b){
   if(a==='registros')renderRegistros();
 }
 function novoRegistro(){if(confirm('Deseja limpar todos os dados do formulário?'))location.reload()}
-document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();atualizarDashboard();iniciarNavegacaoHati();
+document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();iniciarAutosaveRascunho();restaurarRascunho();atualizarDashboard();iniciarNavegacaoHati();
 </script>
 </body></html>
