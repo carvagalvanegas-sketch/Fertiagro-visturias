@@ -67,100 +67,45 @@ input,select,textarea{border-color:#d3ded8;border-radius:10px;background:#fff}in
 const SUPABASE_URL='https://eqcyzbkbiodaxuywfqwp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u9r4nq1uz7k5fiBM-MRyfQ_zwJJy2n8';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 const mandatory=['placa1','placa2','carreta','lacre','produto','doc'];
 // As fotos são enviadas ao Supabase imediatamente para não acumular arquivos
 // grandes da câmera na memória do Android. Guardamos apenas os metadados/URLs.
 const photoFiles={};
 let vistoriaIdAtual=crypto.randomUUID();
 let extraCounter=0;
-const DRAFT_KEY='hati_vistoria_em_andamento_v1';
+const DRAFT_KEY='hati_vistoria_em_andamento_v2';
+const DB_NAME='hati_offline_db_v1',DB_VERSION=1,PHOTO_STORE='photos';
 let restaurandoRascunho=false;
-function dadosFormularioRascunho(){
-  const dados={};
-  document.querySelectorAll('input,select,textarea').forEach(el=>{
-    if(!el.id || el.type==='file')return;
-    if(el.id.startsWith('edit-') || el.id.includes('Picker'))return;
-    dados[el.id]=el.value;
-  });
-  return dados;
-}
-function rascunhoTemConteudo(campos,fotos){
-  const temFoto=Object.values(fotos||{}).some(f=>f&&((f.url||f.path||f.previewUrl)));
-  const idsIgnorados=['data','hora'];
-  const temCampo=Object.entries(campos||{}).some(([id,val])=>!idsIgnorados.includes(id)&&String(val??'').trim()!=='');
-  return temFoto||temCampo;
-}
-function salvarRascunho(){
-  if(restaurandoRascunho)return;
-  try{
-    const campos=dadosFormularioRascunho();
-    const fotos={};
-    Object.entries(photoFiles).forEach(([key,f])=>{
-      if(f)fotos[key]={key:f.key||key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||''};
-    });
-    if(!rascunhoTemConteudo(campos,fotos)){
-      apagarRascunho();
-      return;
-    }
-    localStorage.setItem(DRAFT_KEY,JSON.stringify({versao:2,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString()}));
-  }catch(e){console.warn('Não foi possível guardar o rascunho:',e)}
-}
-function mostrarAvisoRascunho(){
-  let box=document.getElementById('draftRestoreToast');
-  if(!box){
-    box=document.createElement('div');
-    box.id='draftRestoreToast';
-    box.className='draft-toast';
-    box.innerHTML='<div class="draft-toast-icon">✓</div><div><p class="draft-toast-title">Vistoria restaurada</p><p class="draft-toast-text">A vistoria em andamento foi carregada automaticamente. Você pode continuar de onde parou.</p></div>';
-    document.body.appendChild(box);
-  }
-  box.classList.add('show');
-  clearTimeout(window._hatiDraftToastTimer);
-  window._hatiDraftToastTimer=setTimeout(()=>box.classList.remove('show'),5000);
-}
+let draftSyncBusy=false;
+function abrirDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const db=r.result;if(!db.objectStoreNames.contains(PHOTO_STORE)){const st=db.createObjectStore(PHOTO_STORE,{keyPath:'id'});st.createIndex('vistoriaId','vistoriaId',{unique:false})}};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function dbPutFoto(vistoriaId,key,file){const db=await abrirDB();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).put({id:vistoriaId+'::'+key,vistoriaId,key,blob:file instanceof Blob?file:null,nome:file?.name||key,at:new Date().toISOString()});tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function dbGetFotos(vistoriaId){const db=await abrirDB();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readonly');const req=tx.objectStore(PHOTO_STORE).index('vistoriaId').getAll(vistoriaId);req.onsuccess=()=>{db.close();resolve(req.result||[])};req.onerror=()=>{db.close();reject(req.error)}})}
+async function dbDeleteFoto(vistoriaId,key){const db=await abrirDB();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');tx.objectStore(PHOTO_STORE).delete(vistoriaId+'::'+key);tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+async function dbDeleteVistoria(vistoriaId){const rows=await dbGetFotos(vistoriaId);if(!rows.length)return;const db=await abrirDB();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');const st=tx.objectStore(PHOTO_STORE);rows.forEach(x=>st.delete(x.id));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
+function dadosFormularioRascunho(){const dados={};document.querySelectorAll('input,select,textarea').forEach(el=>{if(!el.id||el.type==='file')return;if(el.id.startsWith('edit-')||el.id.includes('Picker'))return;dados[el.id]=el.value});return dados}
+function rascunhoTemConteudo(campos,fotos){const temFoto=Object.keys(fotos||{}).length>0;const idsIgnorados=['data','hora'];const temCampo=Object.entries(campos||{}).some(([id,val])=>!idsIgnorados.includes(id)&&String(val??'').trim()!=='');return temFoto||temCampo}
+async function salvarRascunho(opts={}){if(restaurandoRascunho)return;try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key:f.key||key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(!rascunhoTemConteudo(campos,fotos)){apagarRascunho();return}const draft={versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:!!opts.finalizar};localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(opts.finalizar||navigator.onLine)await sincronizarRascunho();}catch(e){console.warn('Não foi possível guardar o rascunho:',e)}}
+function mostrarAvisoRascunho(text='A vistoria em andamento foi carregada automaticamente. Você pode continuar de onde parou.'){let box=document.getElementById('draftRestoreToast');if(!box){box=document.createElement('div');box.id='draftRestoreToast';box.className='draft-toast';box.innerHTML='<div class="draft-toast-icon">✓</div><div><p class="draft-toast-title">Vistoria restaurada</p><p class="draft-toast-text"></p></div>';document.body.appendChild(box)}box.querySelector('.draft-toast-text').textContent=text;box.classList.add('show');clearTimeout(window._hatiDraftToastTimer);window._hatiDraftToastTimer=setTimeout(()=>box.classList.remove('show'),5000)}
 function apagarRascunho(){try{localStorage.removeItem(DRAFT_KEY)}catch(e){}}
-function restaurarCartoesFoto(keys){
-  const grupos=[['lacre','photoGroup-lacre'],['produto','photoGroup-produto'],['doc','photoGroup-doc']];
-  grupos.forEach(([prefix,id])=>{
-    const max=Math.max(1,...keys.filter(k=>k.startsWith(prefix+'-')).map(k=>parseInt(k.split('-')[1],10)||1));
-    const group=document.getElementById(id),btn=group?.querySelector('.multi-photo-add');
-    let atual=group?.querySelectorAll('.photo-card').length||0;
-    while(btn && atual<max){btn.click();atual++}
-  });
-  const extras=keys.filter(k=>k.startsWith('extra-')).map(k=>parseInt(k.split('-')[1],10)||0);
-  if(extras.length){
-    const maxExtra=Math.max(...extras); extraCounter=Math.max(extraCounter,maxExtra);
-    while(document.querySelectorAll('.photo-card-extra').length<maxExtra)addExtraPhoto();
-  }
-}
-function restaurarRascunho(){
-  try{
-    const raw=localStorage.getItem(DRAFT_KEY); if(!raw)return false;
-    const draft=JSON.parse(raw); if(!draft||!draft.campos){apagarRascunho();return false}
-    if(!rascunhoTemConteudo(draft.campos,draft.fotos||{})){apagarRascunho();return false}
-    restaurandoRascunho=true;
-    vistoriaIdAtual=draft.id||crypto.randomUUID();
-    Object.entries(draft.campos).forEach(([id,val])=>{const el=document.getElementById(id);if(el && el.type!=='file')el.value=val??''});
-    Object.entries(draft.fotos||{}).forEach(([key,f])=>photoFiles[key]=f);
-    restaurarCartoesFoto(Object.keys(photoFiles));
-    Object.entries(photoFiles).forEach(([key,f])=>{
-      const img=document.getElementById('prev-'+key),card=document.getElementById('photoCard-'+key),check=document.getElementById('check-'+key);
-      if(img&&f.url){img.src=f.previewUrl||f.url;img.style.display='block'}
-      if(card&&f.url)card.classList.add('done');
-      if(check&&f.url)check.textContent='✓';
-    });
-    configurarFormatosFormulario();
-    atualizarFotos();
-    restaurandoRascunho=false;
-    setTimeout(mostrarAvisoRascunho,180);
-    return true;
-  }catch(e){console.warn('Falha ao restaurar rascunho:',e);restaurandoRascunho=false;return false}
+async function restaurarCartoesFoto(keys){const grupos=[['lacre','photoGroup-lacre'],['produto','photoGroup-produto'],['doc','photoGroup-doc']];grupos.forEach(([prefix,id])=>{const nums=keys.filter(k=>k.startsWith(prefix+'-')).map(k=>parseInt(k.split('-')[1],10)||1);const max=Math.max(1,...nums);const group=document.getElementById(id),btn=group?.querySelector('.multi-photo-add');let atual=group?.querySelectorAll('.photo-card').length||0;while(btn&&atual<max){btn.click();atual++}});const extras=keys.filter(k=>k.startsWith('extra-')).map(k=>parseInt(k.split('-')[1],10)||0);if(extras.length){const maxExtra=Math.max(...extras);extraCounter=Math.max(extraCounter,maxExtra);while(document.querySelectorAll('.photo-card-extra').length<maxExtra)addExtraPhoto()}}
+async function restaurarRascunho(){try{const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return false;const draft=JSON.parse(raw);if(!draft||!draft.campos){apagarRascunho();return false}if(!rascunhoTemConteudo(draft.campos,draft.fotos||{})){apagarRascunho();return false}restaurandoRascunho=true;vistoriaIdAtual=draft.id||crypto.randomUUID();Object.entries(draft.campos).forEach(([id,val])=>{const el=document.getElementById(id);if(el&&el.type!=='file')el.value=val??''});await restaurarCartoesFoto(Object.keys(draft.fotos||{}));const rows=await dbGetFotos(vistoriaIdAtual);const byKey=Object.fromEntries(rows.map(x=>[x.key,x]));Object.entries(draft.fotos||{}).forEach(([key,f])=>{const row=byKey[key];photoFiles[key]={...f,key,local:!!row||!!f.local};if(row?.blob)photoFiles[key].blob=row.blob});for(const [key,f] of Object.entries(photoFiles)){const img=document.getElementById('prev-'+key),card=document.getElementById('photoCard-'+key),check=document.getElementById('check-'+key);if(f.blob){f.previewUrl=URL.createObjectURL(f.blob);if(img){img.src=f.previewUrl;img.style.display='block'}}else if(f.url&&img){img.src=f.previewUrl||f.url;img.style.display='block'}if(card)card.classList.add('done');if(check)check.textContent='✓'}configurarFormatosFormulario();atualizarFotos();restaurandoRascunho=false;setTimeout(()=>mostrarAvisoRascunho(),180);if(navigator.onLine)setTimeout(()=>sincronizarRascunho(),400);return true}catch(e){console.warn('Falha ao restaurar rascunho:',e);restaurandoRascunho=false;return false}}
+function programarSincronizacaoHati(){
+  clearTimeout(window._hatiSyncTimer);
+  window._hatiSyncTimer=setTimeout(async()=>{
+    if(!navigator.onLine)return;
+    const ok=await sincronizarRascunho();
+    if(!ok && navigator.onLine){
+      clearTimeout(window._hatiSyncRetry);
+      window._hatiSyncRetry=setTimeout(()=>sincronizarRascunho(),3000);
+    }
+  },700);
 }
 function iniciarAutosaveRascunho(){
-  document.querySelectorAll('#abaNova input:not([type="file"]),#abaNova select,#abaNova textarea').forEach(el=>{
-    el.addEventListener('input',salvarRascunho);el.addEventListener('change',salvarRascunho)
-  });
-  window.addEventListener('beforeunload',salvarRascunho);
+  document.querySelectorAll('#abaNova input:not([type="file"]),#abaNova select,#abaNova textarea').forEach(el=>{el.addEventListener('input',()=>salvarRascunho());el.addEventListener('change',()=>salvarRascunho())});
+  window.addEventListener('beforeunload',()=>{try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key,fotos:true,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(rascunhoTemConteudo(campos,fotos))localStorage.setItem(DRAFT_KEY,JSON.stringify({versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:false}))}catch(e){}});
+  window.addEventListener('online',()=>{const st=document.getElementById('status');if(st){st.textContent='Internet voltou. Sincronizando dados e fotos...';st.style.display='block'}programarSincronizacaoHati()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.onLine)programarSincronizacaoHati()});
 }
 const produtosDisponiveis=[
   'FARELO','AÇÚCAR','MARGARINA','ÓLEO DEGOMADO','ÓLEO INDUSTRIALIZADO','ÓLEO REFINADO',
@@ -296,49 +241,22 @@ async function processarFoto(file,key,fromCamera=false){
   try{
     const recortada=await abrirRecorte(file);
     const foto=recortada.size>700*1024?await comprimirFoto(recortada,1280,0.68):recortada;
-    const uploaded=await uploadFotoDireta(vistoriaIdAtual,key,foto); photoFiles[key]=uploaded;
-    if(img){img.src=uploaded.previewUrl||uploaded.url;img.style.display='block'}
-    card?.classList.add('done'); if(check)check.textContent='✓'; atualizarFotos();
-    if(key.startsWith('extra-'))addExtraPhoto();
+    await dbPutFoto(vistoriaIdAtual,key,foto);
+    const localUrl=URL.createObjectURL(foto);
+    photoFiles[key]={key,nome:file.name||key,path:'',url:'',previewUrl:localUrl,blob:foto,local:true};
+    if(img){img.src=localUrl;img.style.display='block'}
+    card?.classList.add('done');if(check)check.textContent='✓';atualizarFotos();if(key.startsWith('extra-'))addExtraPhoto();if(st){st.textContent=navigator.onLine?'Foto guardada. Sincronizando...':'Foto guardada no dispositivo (offline).';st.style.display='block'}
+    await salvarRascunho();
+    if(navigator.onLine)await sincronizarRascunho();
     if(st){st.textContent='';st.style.display='none'}
-    salvarRascunho();
-  }catch(e){console.error(e);if(st){st.textContent='';st.style.display='none'}if(e.message==='Recorte cancelado.'){if(fromCamera){setTimeout(()=>abrirCamera(key),120);}}else{alert('Não foi possível processar a foto: '+(e.message||'verifique a conexão.'))}}
+  }catch(e){console.error(e);if(st){st.textContent='';st.style.display='none'}if(e.message==='Recorte cancelado.'){if(fromCamera)setTimeout(()=>abrirCamera(key),120)}else alert('Não foi possível processar a foto: '+(e.message||'verifique a conexão.'))}
 }
-async function excluirFoto(key,event){
-  if(event){event.preventDefault();event.stopPropagation()}
-  const foto=photoFiles[key];
-  try{
-    if(foto?.path){
-      const {error}=await sb.storage.from('vistorias-fotos').remove([foto.path]);
-      if(error)throw error;
-    }
-    delete photoFiles[key];
-    const card=document.getElementById('photoCard-'+key);
-    const img=document.getElementById('prev-'+key);
-    const check=document.getElementById('check-'+key);
-    const input=card?.querySelector('input[type=\"file\"]');
-    if(input)input.value='';
-    if(img){img.removeAttribute('src');img.style.display='none'}
-    if(check)check.textContent='○';
-    if(card)card.classList.remove('done');
 
-    // Para fotos adicionais de Lacre/Produto/Documento, remove o cartão extra.
-    // O primeiro cartão permanece para permitir registrar uma nova foto.
-    if(card && (key.startsWith('lacre-')||key.startsWith('produto-')||key.startsWith('doc-'))){
-      const group=card.parentElement;
-      const cards=group?.querySelectorAll('.photo-card')||[];
-      if(cards.length>1)card.remove();
-    }else if(card && key.startsWith('extra-')){
-      card.remove();
-    }
-    atualizarFotos();
-    salvarRascunho();
-  }catch(e){
-    console.error(e);
-    alert('Não foi possível excluir a foto: '+(e.message||'verifique a conexão.'));
-  }
-}
-async function uploadFotoDireta(vistoriaId,key,file){if(!file||!file.type.startsWith('image/'))throw new Error('Arquivo de foto inválido.');const foto=file.size>1400*1024?await comprimirFoto(file,1280,0.68):file;const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;const result=await sb.storage.from('vistorias-fotos').upload(path,foto,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});if(result.error)throw result.error;const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);const previewUrl=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:900,height:900,resize:'contain',quality:55}})?.data?.publicUrl||data.publicUrl;return {key,nome:file.name,path,url:data.publicUrl,previewUrl};}
+async function excluirFoto(key,event){if(event){event.preventDefault();event.stopPropagation()}const foto=photoFiles[key];try{if(foto?.path&&navigator.onLine)await sb.storage.from('vistorias-fotos').remove([foto.path]);await dbDeleteFoto(vistoriaIdAtual,key);if(foto?.previewUrl?.startsWith('blob:'))try{URL.revokeObjectURL(foto.previewUrl)}catch(e){}delete photoFiles[key];const card=document.getElementById('photoCard-'+key),img=document.getElementById('prev-'+key),check=document.getElementById('check-'+key),input=card?.querySelector('input[type="file"]');if(input)input.value='';if(img){img.removeAttribute('src');img.style.display='none'}if(check)check.textContent='○';if(card)card.classList.remove('done');if(card&&(key.startsWith('lacre-')||key.startsWith('produto-')||key.startsWith('doc-'))){const group=card.parentElement,cards=group?.querySelectorAll('.photo-card')||[];if(cards.length>1)card.remove()}else if(card&&key.startsWith('extra-'))card.remove();atualizarFotos();await salvarRascunho()}catch(e){console.error(e);alert('Não foi possível excluir a foto: '+(e.message||'erro local'))}}
+
+async function uploadFotoDireta(vistoriaId,key,file){if(!navigator.onLine)throw new Error('Sem internet. A foto foi guardada no dispositivo e será enviada quando a conexão voltar.');if(!file||!file.type.startsWith('image/'))throw new Error('Arquivo de foto inválido.');const foto=file.size>1400*1024?await comprimirFoto(file,1280,0.68):file;const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;const result=await sb.storage.from('vistorias-fotos').upload(path,foto,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});if(result.error)throw result.error;const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);const previewUrl=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:900,height:900,resize:'contain',quality:55}})?.data?.publicUrl||data.publicUrl;return {key,nome:file.name,path,url:data.publicUrl,previewUrl};}
+async function sincronizarRascunho(){if(draftSyncBusy||!navigator.onLine)return false;const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return false;let draft;try{draft=JSON.parse(raw)}catch(e){apagarRascunho();return false}draftSyncBusy=true;try{if(draft.id&&draft.fotos){const rows=await dbGetFotos(draft.id);for(const row of rows){if(!row.blob)continue;const current=photoFiles[row.key]||draft.fotos[row.key];if(current?.path&&current.url)continue;const up=await uploadFotoDireta(draft.id,row.key,row.blob);photoFiles[row.key]={...(photoFiles[row.key]||{}),...up,blob:row.blob,local:true};draft.fotos[row.key]={...(draft.fotos[row.key]||{}),...up,local:true}}draft.campos=dadosFormularioRascunho();draft.fotos=Object.fromEntries(Object.entries(photoFiles).map(([k,f])=>[k,{key:k,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}]));localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(draft.finalizar){const campos=draft.campos;const fotos=Object.values(draft.fotos);const required=['placa1','placa2','carreta'];if(!campos.empresa||!campos.nfe||!campos.motorista||!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!Object.keys(photoFiles).some(k=>k.startsWith('lacre-'))||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-')))return false;const dados={id:draft.id,empresa:campos.empresa,nfe:formatarNFE(campos.nfe).trim(),crt:formatarCRT(campos.crt||''),filhote:campos.filhote,motorista:campos.motorista,placa:campos.placa,lacre:campos.lacre,tipo:campos.tipo,produto:campos.produto,lote:campos.lote,fabricacao:dataBRparaISO(campos.fabricacao),validade:dataBRparaISO(campos.validade),colaborador:campos.colaborador,tecnico:campos.tecnico,data:dataBRparaISO(campos.data),hora:campos.hora||null,status:campos.statusVistoria,volumes:Number(campos.volumes||0),obs:campos.obs,fotos};const {error}=await sb.from('vistorias').upsert(dados,{onConflict:'id'});if(error)throw error;await dbDeleteVistoria(draft.id);apagarRascunho();await photoFilesClear();vistoriaIdAtual=crypto.randomUUID();if(document.getElementById('status')){document.getElementById('status').textContent='✓ Vistoria salva no sistema.';document.getElementById('status').style.display='block'}await atualizarDashboard();await renderRegistros();return true}}return true}catch(e){console.warn('Sincronização offline pendente:',e);return false}finally{draftSyncBusy=false}}
+
 function atualizarFotos(){const total=mandatory.filter(k=>k==='produto'||k==='doc'||k==='lacre'?Object.keys(photoFiles).some(x=>x.startsWith(k+'-')):!!photoFiles[k]).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
@@ -402,8 +320,9 @@ function configurarFormatosFormulario(){
   if(nfe)nfe.addEventListener('input',()=>{nfe.value=formatarNFE(nfe.value)});
   ['fabricacao','validade','data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{el.value=formatarDataBR(el.value)})});
 }
-async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!Object.keys(photoFiles).some(k=>k.startsWith('lacre-'))||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const id=vistoriaIdAtual;const st=document.getElementById('status');st.textContent='Salvando vistoria...';st.style.display='block';try{const fotos=await uploadFotos(id);const dados={id,empresa,nfe,crt:formatarCRT(document.getElementById('crt').value),filhote:document.getElementById('filhote').value,motorista,placa:document.getElementById('placa').value,lacre:document.getElementById('lacre').value,tipo:document.getElementById('tipo').value,produto:document.getElementById('produto').value,lote:document.getElementById('lote').value,fabricacao:dataBRparaISO(document.getElementById('fabricacao').value),validade:dataBRparaISO(document.getElementById('validade').value),colaborador:document.getElementById('colaborador').value,tecnico:document.getElementById('tecnico').value,data:dataBRparaISO(document.getElementById('data').value),hora:document.getElementById('hora').value||null,status:document.getElementById('statusVistoria').value,volumes:Number(document.getElementById('volumes').value||0),obs:document.getElementById('obs').value,fotos};const {error}=await sb.from('vistorias').insert(dados);if(error)throw error;st.textContent='✓ Vistoria salva no sistema.';apagarRascunho();photoFilesClear();vistoriaIdAtual=crypto.randomUUID();atualizarDashboard();renderRegistros();window.scrollTo({top:0,behavior:'smooth'})}catch(e){console.error(e);st.textContent='Erro ao salvar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
-function photoFilesClear(){for(const k of Object.keys(photoFiles))delete photoFiles[k];document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
+async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!photoFiles.placa1||!photoFiles.placa2||!photoFiles.carreta||!Object.keys(photoFiles).some(k=>k.startsWith('lacre-'))||!Object.keys(photoFiles).some(k=>k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const st=document.getElementById('status');st.style.display='block';if(!navigator.onLine){await salvarRascunho({finalizar:true});st.textContent='✓ Vistoria salva no dispositivo. Será enviada automaticamente quando a internet voltar.';return}st.textContent='Salvando vistoria...';await salvarRascunho({finalizar:true});if(!(await sincronizarRascunho())){st.textContent='Sem conexão estável. A vistoria ficou salva no dispositivo e será enviada automaticamente quando a internet voltar.'}}
+
+async function photoFilesClear(){for(const [k,f] of Object.entries(photoFiles)){if(f?.previewUrl?.startsWith('blob:'))try{URL.revokeObjectURL(f.previewUrl)}catch(e){}delete photoFiles[k]}try{await dbDeleteVistoria(vistoriaIdAtual)}catch(e){}document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
 async function getRegistros(){const {data,error}=await sb.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
 async function atualizarDashboard(){const r=await getRegistros(),c=s=>r.filter(x=>x.status===s).length;document.getElementById('metricTotal').textContent=r.length;document.getElementById('metricAguardando').textContent=c('Aguardando análise');document.getElementById('metricLiberadas').textContent=c('Liberado');document.getElementById('metricPendentes').textContent=c('Pendente')+c('Não conforme')}
 async function abrirFoto(url,path){const modal=document.getElementById('photoModal');const img=document.getElementById('photoModalImg');if(!modal||!img||!url)return;const old=img.src;img.removeAttribute('src');img.alt='Carregando foto...';modal.classList.add('open');const loader=document.getElementById('photoModalLoading');if(loader)loader.style.display='flex';let visualUrl=url;try{if(path){const r=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:1200,height:1200,resize:'contain',quality:70}});if(r?.data?.publicUrl)visualUrl=r.data.publicUrl}}catch(e){console.warn('Transformação indisponível, usando foto original.',e)}img.onload=()=>{if(loader)loader.style.display='none'};img.onerror=()=>{if(visualUrl!==url){img.onerror=()=>{if(loader)loader.style.display='none';img.alt='Não foi possível carregar a foto.'};img.src=url}else{if(loader)loader.style.display='none';img.alt='Não foi possível carregar a foto.'}};img.src=visualUrl}
@@ -751,6 +670,6 @@ function mostrarAba(a,b){
   if(a==='registros')renderRegistros();
 }
 function novoRegistro(){if(confirm('Deseja limpar todos os dados do formulário?'))location.reload()}
-document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();iniciarAutosaveRascunho();restaurarRascunho();atualizarDashboard();iniciarNavegacaoHati();
+document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();iniciarAutosaveRascunho();(async()=>{await restaurarRascunho();await atualizarDashboard();iniciarNavegacaoHati();if(navigator.onLine)programarSincronizacaoHati()})();
 </script>
 </body></html>
