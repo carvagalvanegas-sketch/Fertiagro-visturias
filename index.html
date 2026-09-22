@@ -564,39 +564,105 @@ if(window.matchMedia){
   if(mqFotos.addEventListener)mqFotos.addEventListener('change',atualizarModoFotos);
   else if(mqFotos.addListener)mqFotos.addListener(atualizarModoFotos);
 }
-async function carregarArquivoWhatsApp(url,index){
-  if(!url)return null;
+async function carregarImagemParaCompartilhar(url){
+  if(!url) return null;
   try{
     const res=await fetch(url,{mode:'cors',cache:'force-cache'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const blob=await res.blob();
-    if(!blob.type.startsWith('image/'))throw new Error('Arquivo não é imagem.');
-
-    // Reduz a foto para um tamanho adequado ao WhatsApp sem alterar o original salvo no Supabase.
-    try{
-      const bitmap=await createImageBitmap(blob);
-      const max=1600;
-      const scale=Math.min(1,max/Math.max(bitmap.width,bitmap.height));
-      const w=Math.max(1,Math.round(bitmap.width*scale));
-      const h=Math.max(1,Math.round(bitmap.height*scale));
-      const canvas=document.createElement('canvas');
-      canvas.width=w;canvas.height=h;
-      const ctx=canvas.getContext('2d',{alpha:false});
-      ctx.drawImage(bitmap,0,0,w,h);
-      bitmap.close();
-      const jpg=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Falha ao preparar foto.')),'image/jpeg',0.80));
-      return new File([jpg],`vistoria-${index+1}.jpg`,{type:'image/jpeg'});
-    }catch(e){
-      return new File([blob],`vistoria-${index+1}.${blob.type.includes('png')?'png':'jpg'}`,{type:blob.type||'image/jpeg'});
-    }
+    return await createImageBitmap(blob);
   }catch(e){
-    console.warn('Não foi possível preparar foto para WhatsApp:',url,e);
-    return null;
+    return await new Promise(resolve=>{
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=()=>resolve(img);
+      img.onerror=()=>resolve(null);
+      img.src=url;
+    });
   }
 }
+function quebrarTextoCanvas(ctx,text,maxWidth){
+  const palavras=String(text||'').split(/\s+/);
+  const linhas=[]; let linha='';
+  for(const palavra of palavras){
+    const teste=linha?linha+' '+palavra:palavra;
+    if(ctx.measureText(teste).width<=maxWidth) linha=teste;
+    else { if(linha)linhas.push(linha); linha=palavra; }
+  }
+  if(linha)linhas.push(linha);
+  return linhas.length?linhas:['-'];
+}
+async function criarImagemWhatsApp(r){
+  const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url):[];
+  const imagens=[];
+  for(const foto of fotos){
+    const img=await carregarImagemParaCompartilhar(foto.url);
+    if(img) imagens.push(img);
+  }
 
-function textoWhatsAppVistoria(r){
-  return [
+  const W=1080;
+  const margem=54;
+  const bubbleX=38;
+  const bubbleW=W-76;
+  const linhasTexto=[
+    `EMPRESA: ${r.empresa||'-'}`,
+    `NFE: ${r.nfe||'-'}`,
+    `CRT: ${r.crt||'-'}`,
+    `MOTORISTA: ${r.motorista||'-'}`,
+    `PLACA: ${r.placa||'-'}`,
+    `LACRE: ${r.lacre||''}`,
+    `VISTORIADO POR: ${r.colaborador||'-'}`,
+    `TÉCNICO: ${r.tecnico||'-'}`,
+    `HORA DA INSPEÇÃO: ${r.hora||'-'}`
+  ];
+
+  const ctxTemp=document.createElement('canvas').getContext('2d');
+  ctxTemp.font='bold 31px Arial';
+  const linhas=[];
+  for(const texto of linhasTexto){
+    const partes=quebrarTextoCanvas(ctxTemp,texto,bubbleW-margem*2);
+    linhas.push(...partes);
+  }
+  const textoAltura=linhas.length*48+46;
+  const fotosAltura=imagens.length?Math.ceil(imagens.length/2)*360+30:0;
+  const H=Math.max(700,72+textoAltura+fotosAltura+72);
+  const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#efeae6'; ctx.fillRect(0,0,W,H);
+
+  const radius=30;
+  ctx.fillStyle='#00a884';
+  ctx.beginPath();
+  ctx.moveTo(bubbleX+radius,42); ctx.arcTo(bubbleX+bubbleW,42,bubbleX+bubbleW,42+radius,radius);
+  ctx.arcTo(bubbleX+bubbleW,42+textoAltura,bubbleX+bubbleW-radius,42+textoAltura,radius);
+  ctx.arcTo(bubbleX,42+textoAltura,bubbleX,42+textoAltura-radius,radius);
+  ctx.arcTo(bubbleX,42,bubbleX+radius,42,radius); ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle='#ffffff'; ctx.font='bold 31px Arial';
+  let y=92;
+  for(const linha of linhas){ ctx.fillText(linha,margem,y); y+=48; }
+
+  let fy=42+textoAltura+28;
+  const gap=16, colW=(W-2*margem-gap)/2, photoH=330;
+  for(let i=0;i<imagens.length;i++){
+    const col=i%2, row=Math.floor(i/2);
+    const x=margem+col*(colW+gap), py=fy+row*(photoH+gap);
+    const img=imagens[i];
+    const iw=img.width||1, ih=img.height||1;
+    const scale=Math.min(colW/iw,photoH/ih);
+    const dw=iw*scale, dh=ih*scale;
+    ctx.fillStyle='#ffffff'; ctx.fillRect(x,py,colW,photoH);
+    ctx.drawImage(img,x+(colW-dw)/2,py+(photoH-dh)/2,dw,dh);
+    if(img.close) img.close();
+  }
+  return await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível criar a imagem.')),'image/jpeg',0.86));
+}
+async function compartilharWhatsApp(id){
+  const r=window._hatiRegistros?.find(x=>x.id===id);
+  if(!r)return alert('Vistoria não encontrada.');
+
+  // Formato da mensagem no WhatsApp: somente os dados, sem o símbolo ®.
+  const texto=[
     `EMPRESA: ${r.empresa||'-'}`,
     `NFE: ${r.nfe||'-'}`,
     `CRT: ${r.crt||'-'}`,
@@ -607,57 +673,59 @@ function textoWhatsAppVistoria(r){
     `TÉCNICO: ${r.tecnico||'-'}`,
     `HORA DA INSPEÇÃO: ${r.hora||'-'}`
   ].join('\n');
-}
 
-async function compartilharWhatsApp(id){
-  const r=window._hatiRegistros?.find(x=>x.id===id);
-  if(!r)return alert('Vistoria não encontrada.');
-
+  const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
   const btn=document.activeElement;
   const textoOriginal=btn?.textContent;
-  if(btn&&btn.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
+  if(btn?.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
 
   try{
-    const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url):[];
-    const arquivos=[];
-
-    // Prepara cada foto como um arquivo real. Nada é transformado em uma imagem única.
-    for(let i=0;i<fotos.length;i++){
-      const arquivo=await carregarArquivoWhatsApp(fotos[i].url,i);
-      if(arquivo)arquivos.push(arquivo);
-    }
-
-    if(!arquivos.length){
-      alert('Esta vistoria não possui fotos disponíveis para compartilhar.');
-      return;
-    }
-
-    const texto=textoWhatsAppVistoria(r);
-
-    // Compartilhamento nativo do Android/Chrome.
-    // Ao escolher WhatsApp, ele recebe as fotos como arquivos normais
-    // e o texto como conteúdo da mensagem/legenda.
     if(!navigator.share){
-      alert('O compartilhamento nativo não está disponível neste navegador. Abra a vistoria pelo Chrome no celular.');
+      try{await navigator.clipboard?.writeText(texto)}catch(e){}
+      window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
       return;
     }
 
-    try{
-      await navigator.share({
-        title:'Vistoria HATI',
-        text:texto,
-        files:arquivos
-      });
-    }catch(e){
-      if(e?.name==='AbortError')return;
-      console.error('Compartilhamento nativo recusado:',e);
-      alert('Não foi possível abrir o compartilhamento. Tente novamente pelo Chrome no celular.');
+    const files=[];
+    for(let i=0;i<fotos.length;i++){
+      const foto=fotos[i];
+      try{
+        let url=foto.url||'';
+        if(foto.path){
+          const pub=sb.storage.from('vistorias-fotos').getPublicUrl(foto.path);
+          if(pub?.data?.publicUrl)url=pub.data.publicUrl;
+        }
+        if(!url)continue;
+
+        const res=await fetch(url,{mode:'cors',cache:'force-cache'});
+        if(!res.ok)throw new Error('HTTP '+res.status);
+        const blob=await res.blob();
+        const mime=blob.type||'image/jpeg';
+        const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
+        files.push(new File([blob],`vistoria-${String(i+1).padStart(2,'0')}.${ext}`,{type:mime}));
+      }catch(e){
+        console.warn('Foto não preparada para o WhatsApp:',e);
+      }
     }
+
+    // Uma única ação de compartilhamento: o WhatsApp recebe todas as fotos
+    // como arquivos separados e pode montar o álbum/grade automaticamente.
+    const dados={title:'FISCALIZAÇÃO ANIMAL',text:texto};
+    if(files.length){
+      if(!navigator.canShare?.({files})){
+        alert('Este navegador não permite compartilhar as fotos diretamente. Abra esta página no Chrome do Android e tente novamente.');
+        return;
+      }
+      dados.files=files;
+    }
+
+    await navigator.share(dados);
   }catch(e){
-    console.error('Erro ao preparar vistoria para WhatsApp:',e);
-    alert('Não foi possível preparar as fotos para compartilhar. Verifique a conexão e tente novamente.');
+    if(e?.name==='AbortError')return;
+    console.error('Erro ao compartilhar no WhatsApp:',e);
+    alert('Não foi possível abrir o compartilhamento. Tente novamente pelo Chrome no Android.');
   }finally{
-    if(btn&&btn.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
   }
 }
 
