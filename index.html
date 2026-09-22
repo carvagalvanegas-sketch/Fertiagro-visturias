@@ -679,21 +679,11 @@ async function compartilharWhatsApp(id){
   if(btn?.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
 
   try{
-    if(!navigator.share){
-      try{await navigator.clipboard?.writeText(texto)}catch(e){}
-      window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
-      return;
-    }
-
-    // Primeiro compartilha a mensagem, para ela aparecer como mensagem própria.
-    await navigator.share({
-      title:'FISCALIZAÇÃO ANIMAL',
-      text:texto
-    });
-
-    // Depois compartilha as fotos separadamente, para o WhatsApp montar o álbum/grade.
-    if(!fotos.length)return;
-
+    // Monta os arquivos de foto primeiro (antes de qualquer share), para poder
+    // enviar tudo — texto + fotos — em UMA única chamada de compartilhamento.
+    // Chamar navigator.share() duas vezes seguidas falha em muitos Android,
+    // pois a segunda chamada perde a permissão de gesto do usuário assim que
+    // o WhatsApp assume o controle na primeira.
     const files=[];
     for(let i=0;i<fotos.length;i++){
       const foto=fotos[i];
@@ -722,20 +712,33 @@ async function compartilharWhatsApp(id){
       }
     }
 
-    if(!files.length){
-      alert('A mensagem foi compartilhada, mas não foi possível preparar as fotos.');
+    if(!navigator.share){
+      try{await navigator.clipboard?.writeText(texto)}catch(e){}
+      window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
+      if(fotos.length)alert('O texto foi copiado e o WhatsApp Web foi aberto. Este navegador não envia fotos automaticamente — anexe as fotos manualmente.');
       return;
     }
 
-    if(!navigator.canShare?.({files})){
-      alert('A mensagem foi compartilhada. Este navegador não permite compartilhar as fotos em álbum. Abra esta página no Chrome do Android para enviar as fotos.');
+    // Caminho ideal: texto + fotos em um único compartilhamento.
+    if(files.length && navigator.canShare?.({title:'FISCALIZAÇÃO ANIMAL',text:texto,files})){
+      await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto,files});
       return;
     }
 
-    await navigator.share({
-      title:'FOTOS DA VISTORIA',
-      files:files
-    });
+    // Alguns navegadores aceitam arquivos mas não texto+arquivos juntos:
+    // envia as fotos com uma legenda curta em UM único share.
+    if(files.length && navigator.canShare?.({files})){
+      await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto,files});
+      return;
+    }
+
+    // Sem suporte a arquivos: compartilha só o texto e avisa.
+    await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto});
+    if(fotos.length){
+      alert(files.length
+        ? 'A mensagem foi enviada. Este navegador não permite enviar fotos junto com o texto — abra esta página no Chrome do Android para isso.'
+        : 'A mensagem foi enviada, mas não foi possível preparar as fotos (verifique sua conexão).');
+    }
 
   }catch(e){
     if(e?.name==='AbortError')return;
