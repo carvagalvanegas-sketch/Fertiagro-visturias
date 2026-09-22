@@ -612,6 +612,7 @@ function textoWhatsAppVistoria(r){
 async function compartilharWhatsApp(id){
   const r=window._hatiRegistros?.find(x=>x.id===id);
   if(!r)return alert('Vistoria não encontrada.');
+
   const btn=document.activeElement;
   const textoOriginal=btn?.textContent;
   if(btn&&btn.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
@@ -619,42 +620,42 @@ async function compartilharWhatsApp(id){
   try{
     const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url):[];
     const arquivos=[];
+
+    // Prepara cada foto como um arquivo real. Nada é transformado em uma imagem única.
     for(let i=0;i<fotos.length;i++){
       const arquivo=await carregarArquivoWhatsApp(fotos[i].url,i);
       if(arquivo)arquivos.push(arquivo);
     }
 
+    if(!arquivos.length){
+      alert('Esta vistoria não possui fotos disponíveis para compartilhar.');
+      return;
+    }
+
     const texto=textoWhatsAppVistoria(r);
 
-    // Compartilha várias fotos + legenda. No WhatsApp, isso aparece no formato de álbum:
-    // grade 2x2, indicador "+N" quando houver mais fotos, e o texto abaixo das imagens.
-    if(navigator.share && arquivos.length){
-      const dados={title:'Vistoria HATI',text:texto,files:arquivos};
-      if(!navigator.canShare || navigator.canShare({files:arquivos})){
-        try{
-          await navigator.share(dados);
-          return;
-        }catch(e){
-          if(e?.name==='AbortError')return;
-        }
-      }
+    // Compartilhamento nativo do Android/Chrome.
+    // Ao escolher WhatsApp, ele recebe as fotos como arquivos normais
+    // e o texto como conteúdo da mensagem/legenda.
+    if(!navigator.share){
+      alert('O compartilhamento nativo não está disponível neste navegador. Abra a vistoria pelo Chrome no celular.');
+      return;
     }
 
-    // Fallback: baixa as fotos individualmente e copia a legenda.
-    if(arquivos.length){
-      for(const arquivo of arquivos){
-        const url=URL.createObjectURL(arquivo);
-        const a=document.createElement('a');
-        a.href=url;a.download=arquivo.name;a.rel='noopener';
-        document.body.appendChild(a);a.click();a.remove();
-        setTimeout(()=>URL.revokeObjectURL(url),3000);
-      }
+    try{
+      await navigator.share({
+        title:'Vistoria HATI',
+        text:texto,
+        files:arquivos
+      });
+    }catch(e){
+      if(e?.name==='AbortError')return;
+      console.error('Compartilhamento nativo recusado:',e);
+      alert('Não foi possível abrir o compartilhamento. Tente novamente pelo Chrome no celular.');
     }
-    try{await navigator.clipboard?.writeText(texto)}catch(e){}
-    alert('As fotos foram preparadas. A legenda foi copiada. Abra o WhatsApp e envie as fotos junto com a legenda.');
   }catch(e){
     console.error('Erro ao preparar vistoria para WhatsApp:',e);
-    alert('Não foi possível preparar as fotos para o WhatsApp. Verifique se as fotos estão acessíveis e tente novamente.');
+    alert('Não foi possível preparar as fotos para compartilhar. Verifique a conexão e tente novamente.');
   }finally{
     if(btn&&btn.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
   }
