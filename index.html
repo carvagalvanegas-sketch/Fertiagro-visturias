@@ -661,7 +661,6 @@ async function compartilharWhatsApp(id){
   const r=window._hatiRegistros?.find(x=>x.id===id);
   if(!r)return alert('Vistoria não encontrada.');
 
-  // Formato da mensagem no WhatsApp: somente os dados, sem o símbolo ®.
   const texto=[
     `EMPRESA: ${r.empresa||'-'}`,
     `NFE: ${r.nfe||'-'}`,
@@ -686,6 +685,15 @@ async function compartilharWhatsApp(id){
       return;
     }
 
+    // Primeiro compartilha a mensagem, para ela aparecer como mensagem própria.
+    await navigator.share({
+      title:'FISCALIZAÇÃO ANIMAL',
+      text:texto
+    });
+
+    // Depois compartilha as fotos separadamente, para o WhatsApp montar o álbum/grade.
+    if(!fotos.length)return;
+
     const files=[];
     for(let i=0;i<fotos.length;i++){
       const foto=fotos[i];
@@ -699,36 +707,46 @@ async function compartilharWhatsApp(id){
 
         const res=await fetch(url,{mode:'cors',cache:'force-cache'});
         if(!res.ok)throw new Error('HTTP '+res.status);
+
         const blob=await res.blob();
         const mime=blob.type||'image/jpeg';
         const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
-        files.push(new File([blob],`vistoria-${String(i+1).padStart(2,'0')}.${ext}`,{type:mime}));
+
+        files.push(new File(
+          [blob],
+          `vistoria-${String(i+1).padStart(2,'0')}.${ext}`,
+          {type:mime}
+        ));
       }catch(e){
         console.warn('Foto não preparada para o WhatsApp:',e);
       }
     }
 
-    // Uma única ação de compartilhamento: o WhatsApp recebe todas as fotos
-    // como arquivos separados e pode montar o álbum/grade automaticamente.
-    const dados={title:'FISCALIZAÇÃO ANIMAL',text:texto};
-    if(files.length){
-      if(!navigator.canShare?.({files})){
-        alert('Este navegador não permite compartilhar as fotos diretamente. Abra esta página no Chrome do Android e tente novamente.');
-        return;
-      }
-      dados.files=files;
+    if(!files.length){
+      alert('A mensagem foi compartilhada, mas não foi possível preparar as fotos.');
+      return;
     }
 
-    await navigator.share(dados);
+    if(!navigator.canShare?.({files})){
+      alert('A mensagem foi compartilhada. Este navegador não permite compartilhar as fotos em álbum. Abra esta página no Chrome do Android para enviar as fotos.');
+      return;
+    }
+
+    await navigator.share({
+      title:'FOTOS DA VISTORIA',
+      files:files
+    });
+
   }catch(e){
     if(e?.name==='AbortError')return;
     console.error('Erro ao compartilhar no WhatsApp:',e);
-    alert('Não foi possível abrir o compartilhamento. Tente novamente pelo Chrome no Android.');
+    alert('Não foi possível abrir o compartilhamento. Tente novamente.');
   }finally{
-    if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    if(btn?.classList.contains('whatsapp-btn')){
+      btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    }
   }
 }
-
 function gerarPDFVistoria(id){
   const r=window._hatiRegistros?.find(x=>x.id===id);
   if(!r)return alert('Vistoria não encontrada.');
