@@ -1,8 +1,8 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fiscalização HATI - Vistoria</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>*{box-sizing:border-box}
-:root{--green:#16833a;--green-dark:#123524;--green-soft:#eaf4ed;--blue:#2563eb;--blue-soft:#e8eefc;--yellow:#b7791f;--yellow-soft:#fbf3d7;--red:#b42318;--red-soft:#f9e5e3;--dark:#123524;--muted:#647067;--line:#d8e0da;--bg:#f4f7f5}
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fiscalização HATI - Vistoria</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{--green:#238b57;--green-dark:#17633e;--green-soft:#e5f3eb;--blue:#2563eb;--blue-soft:#e7f0fa;--yellow:#b7791f;--yellow-soft:#fff6d9;--red:#b94a43;--red-soft:#f9e8e6;--dark:#17352a;--muted:#66756e;--line:#dce5df;--bg:#f3f6f4;}*{box-sizing:border-box}
+
 body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#18221c}.app{max-width:760px;margin:auto;background:#fff;min-height:100vh}header{background:var(--dark);color:#fff;padding:16px 18px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px #0002}.header-main{display:flex;align-items:center;gap:12px}.logo-mark{width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:900;font-size:16px;overflow:hidden}.logo-image{width:145px;height:52px;background:#000;border-radius:8px;flex:none}.logo-image img{width:100%;height:100%;object-fit:contain;display:block}header h1{margin:0;font-size:22px;letter-spacing:.2px;font-weight:800}header p{margin:4px 0 0;color:#b9c2c7;font-size:13px}main{padding:14px}.status{padding:11px 13px;border-radius:10px;background:var(--green-soft);color:var(--green-dark);font-size:13px;margin-bottom:12px;display:none;border:1px solid #c8e7d7}.draft-toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-18px) scale(.98);width:min(92vw,430px);background:#fff;border:1px solid #cfe4d7;border-left:5px solid var(--green);border-radius:16px;box-shadow:0 14px 35px #0002;padding:13px 15px;display:flex;align-items:center;gap:11px;opacity:0;pointer-events:none;z-index:9999;transition:opacity .22s,transform .22s}.draft-toast.show{opacity:1;transform:translate(-50%,0) scale(1)}.draft-toast-icon{width:36px;height:36px;border-radius:11px;background:var(--green-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex:none}.draft-toast-title{font-size:13px;font-weight:800;color:var(--dark);margin:0}.draft-toast-text{font-size:11px;color:var(--muted);margin:2px 0 0;line-height:1.35}.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.metric{border:1px solid var(--line);border-radius:12px;padding:11px 9px;background:#fff;box-shadow:0 2px 7px #00000008}.metric-label{font-size:10px;font-weight:bold;color:var(--muted);line-height:1.15}.metric-value{font-size:21px;font-weight:900;margin-top:4px}.metric.green{background:var(--green-soft);border-color:#c8e7d7}.metric.green .metric-value{color:var(--green-dark)}.metric.yellow{background:var(--yellow-soft);border-color:#ead99b}.metric.yellow .metric-value{color:#8d6a08}.metric.blue{background:var(--blue-soft);border-color:#cbdced}.metric.blue .metric-value{color:#2d619a}.metric.red{background:var(--red-soft);border-color:#ecc7c3}.metric.red .metric-value{color:var(--red)}.tabs{display:flex;gap:8px;margin-bottom:12px}.tab{flex:1;border:1px solid var(--line);background:#f7f8f8;color:var(--muted);padding:11px;border-radius:10px;font-weight:bold;cursor:pointer}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #0000000b}.card h2{font-size:18px;font-weight:800;margin:0 0 13px;color:var(--dark);display:flex;align-items:center;gap:8px}.section-number{width:24px;height:24px;border-radius:7px;background:var(--green-soft);color:var(--green-dark);display:inline-flex;align-items:center;justify-content:center;font-size:11px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:13px;font-weight:700;color:#59656c;margin-bottom:5px;text-transform:uppercase}input,select,textarea{width:100%;padding:11px;border:1px solid #cbd2d6;border-radius:9px;font-size:14px;font-family:Arial,sans-serif;background:#fff;color:var(--dark);outline:none}input:focus,select:focus,textarea:focus{border-color:#75b997;box-shadow:0 0 0 3px #168a5715}textarea{min-height:88px;resize:vertical}.full{grid-column:1/-1}.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.photo-section{padding-bottom:16px}.photo-intro{display:flex;gap:10px;align-items:center;background:#f7faf8;border:1px solid #d9ebe2;border-radius:11px;padding:11px;margin-bottom:12px}.photo-intro-icon{width:38px;height:38px;border-radius:10px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}.photo-intro strong{font-size:13px}.photo-intro p{margin:3px 0 0;font-size:11px;color:var(--muted);line-height:1.35}.photo-progress{margin-bottom:13px}.photo-progress>div:first-child{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:5px}.photo-progress strong{color:var(--green-dark)}.progress-track{height:7px;background:#e8ecee;border-radius:99px;overflow:hidden}.progress-fill{height:100%;width:0;background:var(--green);border-radius:99px;transition:width .25s}.photo-grid-new{grid-template-columns:repeat(2,1fr);gap:10px}.photo-card{position:relative;border:1px solid #d7dee1;border-radius:13px;background:#fff;padding:9px;cursor:pointer;overflow:hidden;transition:.15s}.photo-card input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.photo-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.photo-number{width:24px;height:24px;border-radius:7px;background:#f0f3f4;color:#657177;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}.photo-check{font-size:18px;color:#a2adb2;line-height:1}.photo-card.done{border-color:#78b998;background:#f4faf7}.photo-card.done .photo-number{background:var(--green-soft);color:var(--green-dark)}.photo-card.done .photo-check{color:var(--green);font-size:15px}.photo-thumb{min-height:120px;border-radius:9px;background:#f2f4f5;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}.photo-thumb .camera-icon{font-size:27px;opacity:.55}.photo-thumb .photo-preview{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:9px;margin:0;display:none}.photo-delete{position:absolute;top:7px;right:7px;width:28px;height:28px;border:0;border-radius:50%;background:#253038e8;color:#fff;font-size:21px;line-height:28px;font-weight:400;display:none;align-items:center;justify-content:center;padding:0;cursor:pointer;z-index:3;box-shadow:0 2px 6px #0005}.photo-delete:active{transform:scale(.94);background:#172026}.photo-card.done .photo-delete{display:flex}.photo-card-title{font-size:12px;font-weight:800;color:var(--dark)}.photo-card-hint{font-size:9px;color:var(--muted);margin-top:3px}.photo-card-extra{grid-column:1/-1}.photo-card-extra .photo-thumb{min-height:92px}.result-status{border-left:4px solid var(--green);padding:10px 12px;background:#f7faf8;border-radius:8px;margin-bottom:10px;font-size:12px;color:#526067}.btn{width:100%;border:0;border-radius:10px;padding:13px;font-weight:700;font-size:14px;font-family:Arial,sans-serif;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--dark);color:white;margin-top:8px}.danger{background:#fff;color:var(--red);border:1px solid #e5b9b5;margin-top:8px}.toolbar{display:flex;gap:8px;margin-bottom:10px}.toolbar input{flex:1}.toolbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 12px;font-weight:700;font-family:Arial,sans-serif;font-size:14px}.records-empty{border:1px dashed #cbd2d6;border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:13px}.footer{text-align:center;padding:10px 0 25px;color:#78838a;font-size:11px}.records-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.records-photos img{width:100%;height:90px;object-fit:contain;background:#f2f4f5;border-radius:7px;cursor:pointer;display:block}.record-photo-placeholder{width:100%;height:90px;border-radius:7px;background:#f2f4f5;display:flex;align-items:center;justify-content:center;color:#69757c;font-size:10px;font-weight:bold;cursor:pointer}.record-photo-placeholder.loaded{display:block}.record-photo-placeholder img{width:100%;height:90px;object-fit:contain;border-radius:7px}.photo-modal{position:fixed;inset:0;background:#000d;z-index:9999;display:none;align-items:center;justify-content:center;padding:15px}.photo-modal.open{display:flex}.photo-modal img{max-width:96vw;max-height:90vh;object-fit:contain}.photo-modal-loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font-size:13px;font-weight:900;letter-spacing:.2px;background:#172026cc;padding:10px 14px;border-radius:10px}.photo-modal-close{position:absolute;top:12px;right:14px;width:42px;height:42px;border:0;border-radius:50%;background:#fff;color:#172026;font-size:25px;font-weight:bold}.photo-actions{display:flex;gap:6px;margin-top:7px}.photo-actions button{flex:1;padding:8px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:10px;font-weight:bold}@media(max-width:760px){.app{max-width:100%;}.app main{max-width:none;margin:0}.record-grid{grid-template-columns:1fr 1fr}.record-field span{font-size:14px}.record-field b{font-size:9px}.record-details{padding:10px}} @media(max-width:420px){.record-grid{grid-template-columns:1fr 1fr}.record-field{padding:8px}.record-field span{font-size:13px}} .multi-photo-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}.multi-photo-add{grid-column:1/-1;width:100%;border:1px dashed #8fbea6;background:#f3faf6;color:#17633e;border-radius:10px;padding:12px;font-size:11px;font-weight:950;cursor:pointer}.multi-photo-group .photo-card{min-width:0}.multi-photo-group .photo-card:first-child{}.multi-photo-group .photo-card-title{font-size:12px}@media(max-width:560px){.multi-photo-group{grid-template-columns:1fr 1fr}}@media(max-width:380px){.multi-photo-group{grid-template-columns:1fr}}@media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}.record-edit-grid{grid-template-columns:1fr 1fr}.record-summary{padding:11px}.record-status{padding:6px 8px}}@media(max-width:380px){.grid,.photo-grid,.record-edit-grid{grid-template-columns:1fr}.record-field.full,.record-edit-grid .full{grid-column:1}header h1{font-size:19px}main{padding:10px}}@media print{body.modal-open{overflow:hidden}
 body{background:#fff}.app{max-width:none}.no-print{display:none!important}header{position:static;box-shadow:none}.card{box-shadow:none;break-inside:avoid}}
-:root{--bg:#f3f6f4;--dark:#17352a;--green:#238b57;--green-dark:#17633e;--green-soft:#e5f3eb;--yellow-soft:#fff6d9;--blue-soft:#e7f0fa;--red-soft:#f9e8e6;--red:#b94a43;--line:#dce5df;--muted:#66756e}
+
 body{background:linear-gradient(180deg,#edf3ef 0%,#f7f9f8 100%);font-family:Inter,Arial,Helvetica,sans-serif}
 .app{max-width:1040px;background:#f7f9f8}.app main{max-width:980px;margin:0 auto}
 header{background:linear-gradient(135deg,#102c22,#1d4b38);padding:14px 16px;box-shadow:0 4px 18px #123b2a25}
@@ -14,10 +14,10 @@ input,select,textarea{border-color:#d3ded8;border-radius:10px;background:#fff}in
 .photo-card{border-color:#d9e3dd;border-radius:14px;box-shadow:0 2px 8px #17352a08}.photo-card.done{border-color:#75b993;background:#f3faf6}
 .btn{border-radius:11px}.primary{background:linear-gradient(135deg,#238b57,#1d774b)}
 .toolbar{background:#edf3ef;padding:5px;border-radius:12px}.toolbar input{border:0;background:transparent;box-shadow:none}.toolbar button{border:0;background:#fff}
-.records-card{background:#fff;border:1px solid #dfe7e2;border-radius:16px;overflow:hidden}.records-month{font-size:11px;font-weight:900;color:#53645b;letter-spacing:.7px;padding:14px 5px 8px;border-bottom:1px solid #e6ece8}.record-row{border:1px solid #dfe7e2;border-radius:13px;margin:8px 0;background:#fff;overflow:hidden;box-shadow:0 2px 8px #17352a08}.record-summary{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:13px 12px;cursor:pointer}.record-main{min-width:0}.record-plate{font-size:15px;font-weight:950;color:#17352a;letter-spacing:.15px}.record-sub{font-size:11px;color:#68766f;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-status{font-size:10px;font-weight:950;border-radius:999px;padding:7px 10px;white-space:nowrap}.record-ver{font-size:10px;font-weight:950;color:#238b57;margin-left:7px}.record-status-select{border:0;outline:0;appearance:auto;cursor:pointer;font-size:10px;font-weight:950;border-radius:999px;padding:7px 9px;max-width:155px}.record-status-select:disabled{opacity:.6;cursor:wait}.multi-photo-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}.multi-photo-add{grid-column:1/-1;width:100%;border:1px dashed #8fbea6;background:#f3faf6;color:#17633e;border-radius:10px;padding:12px;font-size:11px;font-weight:950;cursor:pointer}.multi-photo-group .photo-card{min-width:0}.multi-photo-group .photo-card:first-child{}.multi-photo-group .photo-card-title{font-size:12px}@media(max-width:560px){.multi-photo-group{grid-template-columns:1fr 1fr}}@media(max-width:380px){.multi-photo-group{grid-template-columns:1fr}}@media(max-width:560px){.record-summary{grid-template-columns:minmax(0,1fr) auto}.record-status-select{max-width:135px;font-size:9px;padding:7px 8px}}.record-details{display:none;border-top:1px solid #e5ece8;padding:12px;background:#fbfcfb}.record-row.open .record-details{display:block}.record-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.record-field{background:#f0f5f2;border:1px solid #e0e9e3;border-radius:9px;padding:9px;min-width:0}.record-field b{display:block;font-size:9px;color:#718078;text-transform:uppercase;margin-bottom:4px;letter-spacing:.35px}.record-field span{font-size:13px;font-weight:800;color:#24352d;overflow-wrap:anywhere}.record-field.full{grid-column:1/-1}.whatsapp-btn{border:0;border-radius:10px;padding:11px 13px;background:#1fa463;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 10px rgba(31,164,99,.18)}
+.records-card{background:#fff;border:1px solid #dfe7e2;border-radius:16px;overflow:hidden}.records-month{font-size:11px;font-weight:900;color:#53645b;letter-spacing:.7px;padding:14px 5px 8px;border-bottom:1px solid #e6ece8}.record-row{border:1px solid #dfe7e2;border-radius:13px;margin:8px 0;background:#fff;overflow:hidden;box-shadow:0 2px 8px #17352a08}.record-summary{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:13px 12px;cursor:pointer}.record-main{min-width:0}.record-plate{font-size:15px;font-weight:950;color:#17352a;letter-spacing:.15px}.record-sub{font-size:11px;color:#68766f;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-status{font-size:10px;font-weight:950;border-radius:999px;padding:7px 10px;white-space:nowrap}.record-ver{font-size:10px;font-weight:950;color:#238b57;margin-left:7px}.record-status-select{border:0;outline:0;appearance:auto;cursor:pointer;font-size:10px;font-weight:950;border-radius:999px;padding:7px 9px;max-width:155px}.record-status-select:disabled{opacity:.6;cursor:wait}@media(max-width:560px){.record-summary{grid-template-columns:minmax(0,1fr) auto}.record-status-select{max-width:135px;font-size:9px;padding:7px 8px}}.record-details{display:none;border-top:1px solid #e5ece8;padding:12px;background:#fbfcfb}.record-row.open .record-details{display:block}.record-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.record-field{background:#f0f5f2;border:1px solid #e0e9e3;border-radius:9px;padding:9px;min-width:0}.record-field b{display:block;font-size:9px;color:#718078;text-transform:uppercase;margin-bottom:4px;letter-spacing:.35px}.record-field span{font-size:13px;font-weight:800;color:#24352d;overflow-wrap:anywhere}.record-field.full{grid-column:1/-1}.whatsapp-btn{border:0;border-radius:10px;padding:11px 13px;background:#1fa463;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 10px rgba(31,164,99,.18)}
 .whatsapp-btn:active{transform:scale(.98)}
-.pdf-btn{flex:1;background:#eef7f2;color:#17633e;border:1px solid #b9d9c8;border-radius:8px;padding:9px 10px;font-size:10px;font-weight:950;cursor:pointer}.record-actions{display:flex;gap:7px;margin-top:11px}.record-actions button{flex:1;border:1px solid #d6e1da;background:#fff;color:#294038;border-radius:9px;padding:10px;font-size:11px;font-weight:950}.record-actions .edit-btn{background:#17352a;color:#fff;border-color:#17352a}.records-photos{display:flex;flex-direction:column;gap:7px;margin-top:9px}.record-photo-item{display:block;border:1px solid #dce5df;background:#fff;border-radius:10px;overflow:hidden}.record-photo-name{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;border:0;background:#fff;text-align:left;padding:6px;cursor:pointer}.record-photo-name:active{background:#edf5f0}.record-photo-mobile-label{display:block;padding:7px 8px;font-size:13px;font-weight:900;color:#263a31}.record-photo-thumb{display:none;width:100%;height:150px;object-fit:contain;background:#f2f4f5;border-radius:7px}.record-photo-hint{display:none;color:#718078;font-size:10px;font-weight:800;padding:4px 8px 7px}.record-photo-open{display:none}.record-photo-edit{display:flex;align-items:center;gap:7px}.record-photo-edit input{display:none}.record-photo-edit button{border:1px solid #d6e1da;background:#fff;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900}.record-photo-add{margin-top:8px;border:1px dashed #a9c7b6;background:#f5faf7;color:#17633e;border-radius:9px;padding:10px;width:100%;font-size:10px;font-weight:950}.record-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.record-edit-grid .full{grid-column:1/-1}.record-edit-grid label{margin-bottom:4px}.record-edit-grid input,.record-edit-grid select,.record-edit-grid textarea{box-sizing:border-box;font-size:13px;padding:10px}.edit-title{font-size:12px;font-weight:950;color:#17352a;margin-bottom:9px}.photo-edit-section{margin-top:13px;padding-top:11px;border-top:1px solid #e0e9e3}.photo-edit-section h3{font-size:12px;margin:0 0 8px;color:#17352a}.photo-edit-list{display:flex;flex-direction:column;gap:6px}.photo-edit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #dce5df;border-radius:9px;padding:8px}.photo-edit-row strong{font-size:11px;color:#263a31}.photo-edit-row small{display:block;color:#7a8780;font-size:9px;margin-top:2px}.photo-edit-row button,.photo-edit-row label{font-size:9px!important;font-weight:900!important;text-transform:none!important;margin:0!important;padding:7px 8px!important;border:1px solid #d6e1da!important;border-radius:7px!important;background:#fff!important;color:#294038!important;white-space:nowrap}.photo-edit-row input{display:none}.photo-edit-view{border:0;background:transparent;padding:9px 0;text-align:left;font-size:12px;font-weight:900;color:#263a31;flex:1;cursor:pointer}.photo-edit-row{display:flex;align-items:center;gap:8px}.photo-edit-new{margin-top:7px}.quick-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 11px;background:#f4f8f5;border:1px solid #dce8e0;border-radius:10px}.quick-status b{display:block;font-size:9px;color:#718078;letter-spacing:.4px}.quick-status .record-current-status{display:block;font-size:12px;font-weight:900;color:#17352a;margin-top:3px}.quick-status select{width:auto;min-width:155px;padding:8px 9px;font-size:11px;font-weight:800;border-radius:8px}.multi-photo-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}.multi-photo-add{grid-column:1/-1;width:100%;border:1px dashed #8fbea6;background:#f3faf6;color:#17633e;border-radius:10px;padding:12px;font-size:11px;font-weight:950;cursor:pointer}.multi-photo-group .photo-card{min-width:0}.multi-photo-group .photo-card:first-child{}.multi-photo-group .photo-card-title{font-size:12px}@media(max-width:560px){.multi-photo-group{grid-template-columns:1fr 1fr}}@media(max-width:380px){.multi-photo-group{grid-template-columns:1fr}}@media(min-width:761px){.record-photo-name{display:block;padding:6px}.record-photo-mobile-label{display:none}.record-photo-thumb{display:block}.record-photo-hint{display:block}.record-photo-item{background:#f8faf9}}@media(max-width:760px){.record-photo-thumb{display:none!important}.record-photo-mobile-label{display:block}.record-photo-hint{display:none}.record-photo-name{min-height:48px}}@media(max-width:560px){.quick-status{align-items:stretch;flex-direction:column}.quick-status select{width:100%;min-width:0}}.photo-modal{background:#10231ddd}
-.multi-photo-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}.multi-photo-add{grid-column:1/-1;width:100%;border:1px dashed #8fbea6;background:#f3faf6;color:#17633e;border-radius:10px;padding:12px;font-size:11px;font-weight:950;cursor:pointer}.multi-photo-group .photo-card{min-width:0}.multi-photo-group .photo-card:first-child{}.multi-photo-group .photo-card-title{font-size:12px}@media(max-width:560px){.multi-photo-group{grid-template-columns:1fr 1fr}}@media(max-width:380px){.multi-photo-group{grid-template-columns:1fr}}@media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}.record-grid{grid-template-columns:1fr}.record-field.full{grid-column:auto}.logo-image{width:125px;height:46px}main{padding:11px}.card{padding:13px}}
+.pdf-btn{flex:1;background:#eef7f2;color:#17633e;border:1px solid #b9d9c8;border-radius:8px;padding:9px 10px;font-size:10px;font-weight:950;cursor:pointer}.record-actions{display:flex;gap:7px;margin-top:11px}.record-actions button{flex:1;border:1px solid #d6e1da;background:#fff;color:#294038;border-radius:9px;padding:10px;font-size:11px;font-weight:950}.record-actions .edit-btn{background:#17352a;color:#fff;border-color:#17352a}.records-photos{display:flex;flex-direction:column;gap:7px;margin-top:9px}.record-photo-item{display:block;border:1px solid #dce5df;background:#fff;border-radius:10px;overflow:hidden}.record-photo-name{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;border:0;background:#fff;text-align:left;padding:6px;cursor:pointer}.record-photo-name:active{background:#edf5f0}.record-photo-mobile-label{display:block;padding:7px 8px;font-size:13px;font-weight:900;color:#263a31}.record-photo-thumb{display:none;width:100%;height:150px;object-fit:contain;background:#f2f4f5;border-radius:7px}.record-photo-hint{display:none;color:#718078;font-size:10px;font-weight:800;padding:4px 8px 7px}.record-photo-open{display:none}.record-photo-edit{display:flex;align-items:center;gap:7px}.record-photo-edit input{display:none}.record-photo-edit button{border:1px solid #d6e1da;background:#fff;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900}.record-photo-add{margin-top:8px;border:1px dashed #a9c7b6;background:#f5faf7;color:#17633e;border-radius:9px;padding:10px;width:100%;font-size:10px;font-weight:950}.record-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.record-edit-grid .full{grid-column:1/-1}.record-edit-grid label{margin-bottom:4px}.record-edit-grid input,.record-edit-grid select,.record-edit-grid textarea{box-sizing:border-box;font-size:13px;padding:10px}.edit-title{font-size:12px;font-weight:950;color:#17352a;margin-bottom:9px}.photo-edit-section{margin-top:13px;padding-top:11px;border-top:1px solid #e0e9e3}.photo-edit-section h3{font-size:12px;margin:0 0 8px;color:#17352a}.photo-edit-list{display:flex;flex-direction:column;gap:6px}.photo-edit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #dce5df;border-radius:9px;padding:8px}.photo-edit-row strong{font-size:11px;color:#263a31}.photo-edit-row small{display:block;color:#7a8780;font-size:9px;margin-top:2px}.photo-edit-row button,.photo-edit-row label{font-size:9px!important;font-weight:900!important;text-transform:none!important;margin:0!important;padding:7px 8px!important;border:1px solid #d6e1da!important;border-radius:7px!important;background:#fff!important;color:#294038!important;white-space:nowrap}.photo-edit-row input{display:none}.photo-edit-view{border:0;background:transparent;padding:9px 0;text-align:left;font-size:12px;font-weight:900;color:#263a31;flex:1;cursor:pointer}.photo-edit-row{display:flex;align-items:center;gap:8px}.photo-edit-new{margin-top:7px}.quick-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 11px;background:#f4f8f5;border:1px solid #dce8e0;border-radius:10px}.quick-status b{display:block;font-size:9px;color:#718078;letter-spacing:.4px}.quick-status .record-current-status{display:block;font-size:12px;font-weight:900;color:#17352a;margin-top:3px}.quick-status select{width:auto;min-width:155px;padding:8px 9px;font-size:11px;font-weight:800;border-radius:8px}@media(min-width:761px){.record-photo-name{display:block;padding:6px}.record-photo-mobile-label{display:none}.record-photo-thumb{display:block}.record-photo-hint{display:block}.record-photo-item{background:#f8faf9}}@media(max-width:760px){.record-photo-thumb{display:none!important}.record-photo-mobile-label{display:block}.record-photo-hint{display:none}.record-photo-name{min-height:48px}}@media(max-width:560px){.quick-status{align-items:stretch;flex-direction:column}.quick-status select{width:100%;min-width:0}}.photo-modal{background:#10231ddd}
+@media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}.record-grid{grid-template-columns:1fr}.record-field.full{grid-column:auto}.logo-image{width:125px;height:46px}main{padding:11px}.card{padding:13px}}
 @media(max-width:380px){.logo-image{width:112px;height:44px}header h1{font-size:18px}}
 
 /* Seletor de produtos - otimizado para Android */
@@ -91,9 +91,9 @@ const SUPABASE_URL='https://eqcyzbkbiodaxuywfqwp.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u9r4nq1uz7k5fiBM-MRyfQ_zwJJy2n8';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
-const mandatory=['placa1','placa2','carreta','lacre','produto','doc'];
 // As fotos são enviadas ao Supabase imediatamente para não acumular arquivos
 // grandes da câmera na memória do Android. Guardamos apenas os metadados/URLs.
+// Estado local da vistoria atual.
 const photoFiles={};
 let vistoriaIdAtual=crypto.randomUUID();
 let extraCounter=0;
@@ -108,7 +108,7 @@ async function dbDeleteFoto(vistoriaId,key){const db=await abrirDB();return new 
 async function dbDeleteVistoria(vistoriaId){const rows=await dbGetFotos(vistoriaId);if(!rows.length)return;const db=await abrirDB();return new Promise((resolve,reject)=>{const tx=db.transaction(PHOTO_STORE,'readwrite');const st=tx.objectStore(PHOTO_STORE);rows.forEach(x=>st.delete(x.id));tx.oncomplete=()=>{db.close();resolve()};tx.onerror=()=>{db.close();reject(tx.error)}})}
 function dadosFormularioRascunho(){const dados={};document.querySelectorAll('input,select,textarea').forEach(el=>{if(!el.id||el.type==='file')return;if(el.id.startsWith('edit-')||el.id.includes('Picker'))return;dados[el.id]=el.value});return dados}
 function rascunhoTemConteudo(campos,fotos){const temFoto=Object.keys(fotos||{}).length>0;const idsIgnorados=['data','hora'];const temCampo=Object.entries(campos||{}).some(([id,val])=>!idsIgnorados.includes(id)&&String(val??'').trim()!=='');return temFoto||temCampo}
-async function salvarRascunho(opts={}){if(restaurandoRascunho)return;try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key:f.key||key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(!rascunhoTemConteudo(campos,fotos)){apagarRascunho();return}const draft={versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:!!opts.finalizar};localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(opts.finalizar||navigator.onLine)await sincronizarRascunho();}catch(e){console.warn('Não foi possível guardar o rascunho:',e)}}
+async function salvarRascunho(opts={}){if(restaurandoRascunho)return true;try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key:f.key||key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(!rascunhoTemConteudo(campos,fotos)){apagarRascunho();return true}const draft={versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:!!opts.finalizar};localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(opts.finalizar||navigator.onLine)return await sincronizarRascunho();return true}catch(e){console.warn('Não foi possível guardar o rascunho:',e);return false}}
 function mostrarAvisoRascunho(text='A vistoria em andamento foi carregada automaticamente. Você pode continuar de onde parou.'){let box=document.getElementById('draftRestoreToast');if(!box){box=document.createElement('div');box.id='draftRestoreToast';box.className='draft-toast';box.innerHTML='<div class="draft-toast-icon">✓</div><div><p class="draft-toast-title">Vistoria restaurada</p><p class="draft-toast-text"></p></div>';document.body.appendChild(box)}box.querySelector('.draft-toast-text').textContent=text;box.classList.add('show');clearTimeout(window._hatiDraftToastTimer);window._hatiDraftToastTimer=setTimeout(()=>box.classList.remove('show'),5000)}
 function apagarRascunho(){try{localStorage.removeItem(DRAFT_KEY)}catch(e){}}
 async function restaurarCartoesFoto(keys){renderPhotoGroups()}
@@ -126,7 +126,7 @@ function programarSincronizacaoHati(){
 }
 function iniciarAutosaveRascunho(){
   document.querySelectorAll('#abaNova input:not([type="file"]),#abaNova select,#abaNova textarea').forEach(el=>{el.addEventListener('input',()=>salvarRascunho());el.addEventListener('change',()=>salvarRascunho())});
-  window.addEventListener('beforeunload',()=>{try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key,fotos:true,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(rascunhoTemConteudo(campos,fotos))localStorage.setItem(DRAFT_KEY,JSON.stringify({versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:false}))}catch(e){}});
+  window.addEventListener('beforeunload',()=>{try{const campos=dadosFormularioRascunho();const fotos={};Object.entries(photoFiles).forEach(([key,f])=>{if(f)fotos[key]={key,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}});if(rascunhoTemConteudo(campos,fotos))localStorage.setItem(DRAFT_KEY,JSON.stringify({versao:3,id:vistoriaIdAtual,campos,fotos,salvoEm:new Date().toISOString(),finalizar:false}))}catch(e){}});
   window.addEventListener('online',()=>{const st=document.getElementById('status');if(st){st.textContent='Internet voltou. Sincronizando dados e fotos...';st.style.display='block'}programarSincronizacaoHati()});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.onLine)programarSincronizacaoHati()});
 }
@@ -227,8 +227,6 @@ function concluirCameraGrupo(){const g=cameraReturnGroup;if(g){fecharCamera();co
 function concluirGrupoFotos(groupKey){const n=photoKeysForGroup(groupKey).length;const st=document.getElementById('status');if(st){st.textContent=`✓ ${n} ${photoGroupLabel(groupKey).toUpperCase()} ${n===1?'REGISTRADA':'REGISTRADAS'}.`;st.style.display='block';clearTimeout(window._photoStatusTimer);window._photoStatusTimer=setTimeout(()=>{st.style.display='none'},1800)}salvarRascunho();}
 function initPhotos(){renderPhotoGroups()}
 function addExtraPhoto(){renderPhotoGroup('extra')}
-function addPhotoCard(){return null}
-function addMultiPhotoGroup(){return null}
 let cameraStream=null,cameraKey=null,cameraReturnGroup=null;
 async function abrirCamera(key){
   cameraKey=key; const modal=document.getElementById('cameraModal'),video=document.getElementById('cameraVideo');
@@ -248,7 +246,7 @@ async function capturarFotoCamera(){
   const max=1600,scale=Math.min(1,max/video.videoWidth); const canvas=document.createElement('canvas'); canvas.width=Math.max(1,Math.round(video.videoWidth*scale)); canvas.height=Math.max(1,Math.round(video.videoHeight*scale));
   const ctx=canvas.getContext('2d',{alpha:false}); ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const blob=await new Promise((res,rej)=>canvas.toBlob(b=>b?res(b):rej(new Error('Não foi possível capturar a foto.')),'image/jpeg',0.82));
-  const group=cameraReturnGroup||cameraKey; const file=new File([blob],(group||'foto')+'.jpg',{type:'image/jpeg'}); fecharCamera(); const finalKey=makePhotoKey(group); await processarFoto(file,finalKey,true);
+  const group=cameraReturnGroup||cameraKey; const file=new File([blob],(group||'foto')+'.jpg',{type:'image/jpeg'}); await garantirArmazenamentoLocal(); fecharCamera(); const finalKey=makePhotoKey(group); await processarFoto(file,finalKey,true);
 }
 async function preview(input,id,key){const files=[...(input.files||[])];input.value='';if(files.length)await processarFilaFotos(files,key)}
 async function processarFilaFotos(files,groupKey){photoSessionQueue=[...files];for(const file of photoSessionQueue){const key=(groupKey==='placa1'||groupKey==='placa2'||groupKey==='carreta')?groupKey:makePhotoKey(groupKey);await processarFoto(file,key,false)}photoSessionQueue=[];renderPhotoGroup(groupKey);atualizarFotos();}
@@ -279,7 +277,13 @@ async function confirmarRecorte(){
   }catch(e){if(cropReject)cropReject(e);cancelarRecorte()}
 }
 const cropSelectionEl=document.getElementById('cropSelection');if(cropSelectionEl){cropSelectionEl.addEventListener('pointerdown',iniciarDragCrop);window.addEventListener('pointermove',moverCrop);window.addEventListener('pointerup',terminarDragCrop);window.addEventListener('pointercancel',terminarDragCrop)}
+async function garantirArmazenamentoLocal(){
+  try{
+    if(navigator.storage?.persist) await navigator.storage.persist();
+  }catch(e){console.warn('Não foi possível solicitar armazenamento persistente:',e)}
+}
 async function processarFoto(file,key,fromCamera=false){
+  await garantirArmazenamentoLocal();
   const st=document.getElementById('status');
   if(st){st.textContent='Ajuste e recorte a foto...';st.style.display='block'}
   try{
@@ -314,41 +318,10 @@ async function excluirFoto(key,event){
   }catch(e){console.error(e);alert('Não foi possível excluir a foto: '+(e.message||'erro local'))}
 }
 async function uploadFotoDireta(vistoriaId,key,file){if(!navigator.onLine)throw new Error('Sem internet. A foto foi guardada no dispositivo e será enviada quando a conexão voltar.');if(!file||!file.type.startsWith('image/'))throw new Error('Arquivo de foto inválido.');const foto=file.size>1400*1024?await comprimirFoto(file,1280,0.68):file;const path=`${vistoriaId}/${crypto.randomUUID()}_${key}.jpg`;const result=await sb.storage.from('vistorias-fotos').upload(path,foto,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});if(result.error)throw result.error;const {data}=sb.storage.from('vistorias-fotos').getPublicUrl(path);const previewUrl=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:900,height:900,resize:'contain',quality:55}})?.data?.publicUrl||data.publicUrl;return {key,nome:file.name,path,url:data.publicUrl,previewUrl};}
-async function sincronizarRascunho(){if(draftSyncBusy||!navigator.onLine)return false;const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return false;let draft;try{draft=JSON.parse(raw)}catch(e){apagarRascunho();return false}draftSyncBusy=true;try{if(draft.id&&draft.fotos){const rows=await dbGetFotos(draft.id);for(const row of rows){if(!row.blob)continue;const current=photoFiles[row.key]||draft.fotos[row.key];if(current?.path&&current.url)continue;const up=await uploadFotoDireta(draft.id,row.key,row.blob);photoFiles[row.key]={...(photoFiles[row.key]||{}),...up,blob:row.blob,local:true};draft.fotos[row.key]={...(draft.fotos[row.key]||{}),...up,local:true}}draft.campos=dadosFormularioRascunho();draft.fotos=Object.fromEntries(Object.entries(photoFiles).map(([k,f])=>[k,{key:k,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}]));localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(draft.finalizar){const campos=draft.campos;const fotos=Object.values(draft.fotos);const temGrupo=k=>Object.keys(photoFiles).some(x=>x===k||x.startsWith(k+'-'));if(!campos.empresa||!campos.nfe||!campos.motorista||!temGrupo('placa1')||!temGrupo('placa2')||!temGrupo('carreta')||!temGrupo('lacre')||!temGrupo('produto')||!temGrupo('doc'))return false;const dados={id:draft.id,empresa:campos.empresa,nfe:formatarNFE(campos.nfe).trim(),crt:formatarCRT(campos.crt||''),filhote:campos.filhote,motorista:campos.motorista,placa:campos.placa,lacre:campos.lacre,tipo:campos.tipo,produto:campos.produto,lote:campos.lote,fabricacao:dataBRparaISO(campos.fabricacao),validade:dataBRparaISO(campos.validade),colaborador:campos.colaborador,tecnico:campos.tecnico,data:dataBRparaISO(campos.data),hora:campos.hora||null,status:campos.statusVistoria,volumes:Number(campos.volumes||0),obs:campos.obs,fotos};const {error}=await sb.from('vistorias').upsert(dados,{onConflict:'id'});if(error)throw error;await dbDeleteVistoria(draft.id);apagarRascunho();await photoFilesClear();vistoriaIdAtual=crypto.randomUUID();if(document.getElementById('status')){document.getElementById('status').textContent='✓ Vistoria salva no sistema.';document.getElementById('status').style.display='block'}await atualizarDashboard();await renderRegistros();return true}}return true}catch(e){console.warn('Sincronização offline pendente:',e);return false}finally{draftSyncBusy=false}}
+async function sincronizarRascunho(){if(draftSyncBusy||!navigator.onLine)return false;const raw=localStorage.getItem(DRAFT_KEY);if(!raw)return false;let draft;try{draft=JSON.parse(raw)}catch(e){apagarRascunho();return false}draftSyncBusy=true;try{if(draft.id&&draft.fotos){const rows=await dbGetFotos(draft.id);for(const row of rows){if(!row.blob)continue;const current=photoFiles[row.key]||draft.fotos[row.key];if(current?.path&&current.url)continue;const up=await uploadFotoDireta(draft.id,row.key,row.blob);photoFiles[row.key]={...(photoFiles[row.key]||{}),...up,blob:row.blob,local:true};draft.fotos[row.key]={...(draft.fotos[row.key]||{}),...up,local:true}}draft.campos=dadosFormularioRascunho();draft.fotos=Object.fromEntries(Object.entries(photoFiles).map(([k,f])=>[k,{key:k,nome:f.nome||'',path:f.path||'',url:f.url||'',previewUrl:f.previewUrl||'',local:!!f.local}]));localStorage.setItem(DRAFT_KEY,JSON.stringify(draft));if(draft.finalizar){const campos=draft.campos;const fotos=Object.values(draft.fotos);if(!campos.empresa||!campos.nfe||!campos.motorista)return false;const dados={id:draft.id,empresa:campos.empresa,nfe:formatarNFE(campos.nfe).trim(),crt:formatarCRT(campos.crt||''),filhote:campos.filhote,motorista:campos.motorista,placa:campos.placa,lacre:campos.lacre,tipo:campos.tipo,produto:campos.produto,lote:campos.lote,fabricacao:dataBRparaISO(campos.fabricacao),validade:dataBRparaISO(campos.validade),colaborador:campos.colaborador,tecnico:campos.tecnico,data:dataBRparaISO(campos.data),hora:campos.hora||null,status:campos.statusVistoria,volumes:Number(campos.volumes||0),obs:campos.obs,fotos};const {error}=await sb.from('vistorias').upsert(dados,{onConflict:'id'});if(error)throw error;await dbDeleteVistoria(draft.id);apagarRascunho();await photoFilesClear();vistoriaIdAtual=crypto.randomUUID();if(document.getElementById('status')){document.getElementById('status').textContent='✓ Vistoria salva no sistema.';document.getElementById('status').style.display='block'}await atualizarDashboard();await renderRegistros();return true}}return true}catch(e){console.warn('Sincronização offline pendente:',e);return false}finally{draftSyncBusy=false}}
 
-function atualizarFotos(){const total=mandatory.filter(k=>Object.keys(photoFiles).some(x=>x===k||x.startsWith(k+'-'))).length;document.getElementById('photoCount').textContent=total+' / 6';document.getElementById('photoProgressBar').style.width=(total/6*100)+'%'}
+function atualizarFotos(){const total=Object.keys(photoFiles).length;const count=document.getElementById('photoCount');const bar=document.getElementById('photoProgressBar');if(count)count.textContent=`${total} ${total===1?'foto':'fotos'}`;if(bar){bar.style.width=total?Math.min(100,total/6*100)+'%':'0%';bar.setAttribute('aria-valuenow',String(total))}}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function stStyle(s){if(s==='Liberado')return'background:#e7f0fa;color:#2d619a;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Pendente')return'background:#fbf3d7;color:#8d6a08;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';if(s==='Não conforme')return'background:#f9e5e3;color:#b42318;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold';return'background:#e6f4ed;color:#116b45;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:bold'}
-async function comprimirFoto(file,maxSize=1000,quality=0.62){
-  if(!file||!file.type.startsWith('image/')) throw new Error('Arquivo de foto inválido.');
-  try{
-    const bitmap=await createImageBitmap(file);
-    const scale=Math.min(1,maxSize/Math.max(bitmap.width,bitmap.height));
-    const w=Math.max(1,Math.round(bitmap.width*scale)),h=Math.max(1,Math.round(bitmap.height*scale));
-    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
-    const ctx=canvas.getContext('2d',{alpha:false}); ctx.drawImage(bitmap,0,0,w,h); bitmap.close();
-    const blob=await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível processar a foto.')),'image/jpeg',quality));
-    return new File([blob],(file.name||'foto').replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'});
-  }catch(e){
-    console.warn('Falha ao processar foto:',e);
-    throw new Error('Não foi possível processar uma das fotos. Tire a foto novamente usando a câmera do celular.');
-  }
-}
-async function uploadOne(path,file,tries=3){
-  let last;
-  for(let i=1;i<=tries;i++){
-    const result=await sb.storage.from('vistorias-fotos').upload(path,file,{upsert:false,contentType:'image/jpeg',cacheControl:'31536000'});
-    if(!result.error)return;
-    last=result.error;
-    await new Promise(r=>setTimeout(r,700*i));
-  }
-  throw last||new Error('Falha no envio da foto.');
-}
-async function uploadFotos(vistoriaId){
-  // Compatibilidade com o fluxo antigo: as fotos já foram enviadas
-  // individualmente no momento em que foram tiradas.
-  return Object.values(photoFiles).filter(f=>f&&f.url);
-}
 function formatarCRT(v){
   let d=String(v||'').toUpperCase().replace(/[^0-9]/g,'');
   if(!d)return 'BR-';
@@ -369,24 +342,27 @@ function dataBRparaISO(v){
   if(dt.getFullYear()!==Number(yyyy)||dt.getMonth()!==Number(mm)-1||dt.getDate()!==Number(dd))return null;
   return `${yyyy}-${mm}-${dd}`;
 }
+function hojeLocalISO(){const d=new Date();const ano=d.getFullYear();const mes=String(d.getMonth()+1).padStart(2,'0');const dia=String(d.getDate()).padStart(2,'0');return `${ano}-${mes}-${dia}`}
 function isoParaDataBR(v){
   const m=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/);
   return m?`${m[3]}/${m[2]}/${m[1]}`:String(v||'');
 }
 function configurarFormatosFormulario(){
+  const bind=(el,key,type,handler)=>{if(!el||el.dataset[key])return;el.dataset[key]='1';el.addEventListener(type,handler)};
   const crt=document.getElementById('crt'),nfe=document.getElementById('nfe');
-  if(crt){crt.addEventListener('focus',()=>{if(!crt.value)crt.value='BR-'});crt.addEventListener('input',()=>{crt.value=formatarCRT(crt.value)});crt.addEventListener('blur',()=>{if(crt.value==='BR-')crt.value=''})}
-  if(nfe)nfe.addEventListener('input',()=>{nfe.value=formatarNFE(nfe.value)});
-  ['fabricacao','validade','data'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',()=>{el.value=formatarDataBR(el.value)})});
+  bind(crt,'crtFocus','focus',()=>{if(!crt.value)crt.value='BR-'});
+  bind(crt,'crtInput','input',()=>{crt.value=formatarCRT(crt.value)});
+  bind(crt,'crtBlur','blur',()=>{if(crt.value==='BR-')crt.value='' });
+  bind(nfe,'nfeInput','input',()=>{nfe.value=formatarNFE(nfe.value)});
+  ['fabricacao','validade','data'].forEach(id=>{const el=document.getElementById(id);bind(el,'dateFormat','input',()=>{el.value=formatarDataBR(el.value)})});
 }
-async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}if(!Object.keys(photoFiles).some(k=>k==='placa1'||k.startsWith('placa1-'))||!Object.keys(photoFiles).some(k=>k==='placa2'||k.startsWith('placa2-'))||!Object.keys(photoFiles).some(k=>k==='carreta'||k.startsWith('carreta-'))||!Object.keys(photoFiles).some(k=>k==='lacre'||k.startsWith('lacre-'))||!Object.keys(photoFiles).some(k=>k==='produto'||k.startsWith('produto-'))||!Object.keys(photoFiles).some(k=>k==='doc'||k.startsWith('doc-'))){alert('É necessário registrar as 6 fotos obrigatórias.');return}const st=document.getElementById('status');st.style.display='block';if(!navigator.onLine){await salvarRascunho({finalizar:true});st.textContent='✓ Vistoria salva no dispositivo. Será enviada automaticamente quando a internet voltar.';return}st.textContent='Salvando vistoria...';await salvarRascunho({finalizar:true});if(!(await sincronizarRascunho())){st.textContent='Sem conexão estável. A vistoria ficou salva no dispositivo e será enviada automaticamente quando a internet voltar.'}}
+async function salvar(){const empresa=document.getElementById('empresa').value.trim(),nfe=formatarNFE(document.getElementById('nfe').value).trim(),motorista=document.getElementById('motorista').value.trim();if(!empresa||!nfe||!motorista){alert('Preencha Empresa, NFE e Motorista.');return}const st=document.getElementById('status');st.style.display='block';if(!navigator.onLine){await salvarRascunho({finalizar:true});st.textContent='✓ Vistoria salva no dispositivo. Será enviada automaticamente quando a internet voltar.';return}st.textContent='Salvando vistoria...';await salvarRascunho({finalizar:true});if(!(await sincronizarRascunho())){st.textContent='Sem conexão estável. A vistoria ficou salva no dispositivo e será enviada automaticamente quando a internet voltar.'}}
 
 async function photoFilesClear(){for(const [k,f] of Object.entries(photoFiles)){if(f?.previewUrl?.startsWith('blob:'))try{URL.revokeObjectURL(f.previewUrl)}catch(e){}delete photoFiles[k]}try{await dbDeleteVistoria(vistoriaIdAtual)}catch(e){}document.getElementById('photoGrid').innerHTML='';extraCounter=0;initPhotos();atualizarFotos()}
 async function getRegistros(){const {data,error}=await sb.from('vistorias').select('*').order('salvo_em',{ascending:false});if(error){console.error(error);return[]}return data||[]}
 async function atualizarDashboard(){const r=await getRegistros(),c=s=>r.filter(x=>x.status===s).length;document.getElementById('metricTotal').textContent=r.length;document.getElementById('metricAguardando').textContent=c('Aguardando análise');document.getElementById('metricLiberadas').textContent=c('Liberado');document.getElementById('metricPendentes').textContent=c('Pendente')+c('Não conforme')}
 async function abrirFoto(url,path){const modal=document.getElementById('photoModal');const img=document.getElementById('photoModalImg');if(!modal||!img||!url)return;const old=img.src;img.removeAttribute('src');img.alt='Carregando foto...';modal.classList.add('open');const loader=document.getElementById('photoModalLoading');if(loader)loader.style.display='flex';let visualUrl=url;try{if(path){const r=sb.storage.from('vistorias-fotos').getPublicUrl(path,{transform:{width:1200,height:1200,resize:'contain',quality:70}});if(r?.data?.publicUrl)visualUrl=r.data.publicUrl}}catch(e){console.warn('Transformação indisponível, usando foto original.',e)}img.onload=()=>{if(loader)loader.style.display='none'};img.onerror=()=>{if(visualUrl!==url){img.onerror=()=>{if(loader)loader.style.display='none';img.alt='Não foi possível carregar a foto.'};img.src=url}else{if(loader)loader.style.display='none';img.alt='Não foi possível carregar a foto.'}};img.src=visualUrl}
 function fecharFoto(){const modal=document.getElementById('photoModal'),img=document.getElementById('photoModalImg');if(modal)modal.classList.remove('open');if(img)img.removeAttribute('src')}
-function ativarFotosPreguicosas(){return}
 let hatiNavegacaoPronta=false;
 let hatiAbaAtual='nova';
 let hatiRegistroAberto=null;
@@ -409,6 +385,7 @@ function toggleRegistro(id){
     el.classList.add('open');
     hatiRegistroAberto=id;
     hatiEntrarEstado('registro', {id});
+    prepararCompartilhamentoAoAbrir(id);
   }else{
     if(hatiEstadoAtual()==='registro' && hatiRegistroAberto===id){
       history.back();
@@ -479,7 +456,7 @@ async function adicionarFotosEdicao(input,id){
 async function alterarStatus(id,selectEl){const novo=selectEl?.value;if(!id||!novo)return;const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const anterior=r.status;selectEl.disabled=true;try{const {error}=await sb.from('vistorias').update({status:novo}).eq('id',id);if(error)throw error;r.status=novo;const row=document.getElementById('rec-'+id);const badge=row?.querySelector('.record-status');if(badge){badge.textContent=novo;badge.setAttribute('style',statusBadgeStyle(novo));}const detailStatus=row?.querySelector('.record-current-status');if(detailStatus)detailStatus.textContent=novo;await atualizarDashboard();}catch(e){console.error(e);selectEl.value=anterior||'';alert('Erro ao alterar o status: '+(e.message||'verifique as políticas do Supabase.'));}finally{selectEl.disabled=false}}
 function statusBadgeStyle(s){if(s==='Liberado')return'background:#e5f3eb;color:#17633e';if(s==='Aguardando análise')return'background:#fff6d9;color:#8d6a08';if(s==='Pendente'||s==='Não conforme')return'background:#f9e8e6;color:#a23f39';return'background:#e8f1fb;color:#2d619a'}
 function cancelarEdicao(id){renderRegistros();}
-async function salvarEdicao(id){const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const st=document.getElementById('status');st.textContent='Salvando alterações...';st.style.display='block';try{const editNfe=formatarNFE(document.getElementById('edit-nfe').value).trim(),editCrt=formatarCRT(document.getElementById('edit-crt').value);if(!editNfe){alert('Informe o número da NFE.');return}const dados={empresa:document.getElementById('edit-empresa').value.trim(),nfe:editNfe,crt:editCrt,filhote:document.getElementById('edit-filhote').value,motorista:document.getElementById('edit-motorista').value.trim(),placa:document.getElementById('edit-placa').value, lacre:document.getElementById('edit-lacre').value,tipo:document.getElementById('edit-tipo').value,produto:document.getElementById('edit-produto').value,lote:document.getElementById('edit-lote').value,fabricacao:dataBRparaISO(document.getElementById('edit-fabricacao').value),validade:dataBRparaISO(document.getElementById('edit-validade').value),colaborador:document.getElementById('edit-colaborador').value,tecnico:document.getElementById('edit-tecnico').value,data:dataBRparaISO(document.getElementById('edit-data').value),hora:document.getElementById('edit-hora').value||null,status:document.getElementById('edit-status').value,volumes:Number(document.getElementById('edit-volumes').value||0),obs:document.getElementById('edit-obs').value};let fotos=Array.isArray(r.fotos)?r.fotos.map(x=>({...x})):[];const edits=window._hatiPhotoEdits||{};for(const [idx,file] of Object.entries(edits)){const i=Number(idx);const novaFoto=await uploadFotoDireta(id,fotos[i]?.key||'foto',file);if(fotos[i]?.path)await sb.storage.from('vistorias-fotos').remove([fotos[i].path]);fotos[i]={...(fotos[i]||{}),...novaFoto,key:fotos[i]?.key||'foto',nome_exibicao:nomeFoto(fotos[i]||{},i)}}for(const file of (window._hatiNewPhotos||[])){const key='extra-'+crypto.randomUUID();const novaFoto=await uploadFotoDireta(id,key,file);fotos.push({...novaFoto,key,nome_exibicao:'Foto adicional'})}dados.fotos=fotos;const {error}=await sb.from('vistorias').update(dados).eq('id',id);if(error)throw error;st.textContent='✓ Vistoria atualizada.';window._hatiPhotoEdits={};window._hatiNewPhotos=[];await atualizarDashboard();await renderRegistros();}catch(e){console.error(e);st.textContent='Erro ao editar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
+async function salvarEdicao(id){const r=window._hatiRegistros?.find(x=>x.id===id);if(!r)return;const st=document.getElementById('status');st.textContent='Salvando alterações...';st.style.display='block';try{const editNfe=formatarNFE(document.getElementById('edit-nfe').value).trim(),editCrt=formatarCRT(document.getElementById('edit-crt').value);if(!editNfe){alert('Informe o número da NFE.');return}const dados={empresa:document.getElementById('edit-empresa').value.trim(),nfe:editNfe,crt:editCrt,filhote:document.getElementById('edit-filhote').value,motorista:document.getElementById('edit-motorista').value.trim(),placa:document.getElementById('edit-placa').value, lacre:document.getElementById('edit-lacre').value,tipo:document.getElementById('edit-tipo').value,produto:document.getElementById('edit-produto').value,lote:document.getElementById('edit-lote').value,fabricacao:dataBRparaISO(document.getElementById('edit-fabricacao').value),validade:dataBRparaISO(document.getElementById('edit-validade').value),colaborador:document.getElementById('edit-colaborador').value,tecnico:document.getElementById('edit-tecnico').value,data:dataBRparaISO(document.getElementById('edit-data').value),hora:document.getElementById('edit-hora').value||null,status:document.getElementById('edit-status').value,volumes:Number(document.getElementById('edit-volumes').value||0),obs:document.getElementById('edit-obs').value};let fotos=Array.isArray(r.fotos)?r.fotos.map(x=>({...x})):[];const edits=window._hatiPhotoEdits||{};const oldPaths=[];const uploadedNewPaths=[];try{for(const [idx,file] of Object.entries(edits)){const i=Number(idx);const oldPath=fotos[i]?.path;if(oldPath)oldPaths.push(oldPath);const key=fotos[i]?.key||'foto';const novaFoto=await uploadFotoDireta(id,key,file);if(novaFoto.path)uploadedNewPaths.push(novaFoto.path);fotos[i]={...(fotos[i]||{}),...novaFoto,key,nome_exibicao:nomeFoto(fotos[i]||{},i)}}for(const file of (window._hatiNewPhotos||[])){const key='extra-'+crypto.randomUUID();const novaFoto=await uploadFotoDireta(id,key,file);if(novaFoto.path)uploadedNewPaths.push(novaFoto.path);fotos.push({...novaFoto,key,nome_exibicao:'Foto adicional'})}dados.fotos=fotos;const {error}=await sb.from('vistorias').update(dados).eq('id',id);if(error)throw error;for(const path of oldPaths){try{await sb.storage.from('vistorias-fotos').remove([path])}catch(cleanErr){console.warn('Não foi possível remover foto antiga:',cleanErr)}}}catch(editErr){for(const path of uploadedNewPaths){try{await sb.storage.from('vistorias-fotos').remove([path])}catch(cleanErr){console.warn('Não foi possível limpar upload temporário:',cleanErr)}}throw editErr;}st.textContent='✓ Vistoria atualizada.';window._hatiPhotoEdits={};window._hatiNewPhotos=[];await atualizarDashboard();await renderRegistros();}catch(e){console.error(e);st.textContent='Erro ao editar: '+(e.message||'verifique as políticas do Supabase.');alert(st.textContent)}}
 async function renderRegistros(){
   const box=document.getElementById('listaRegistros');
   if(!box)return;
@@ -592,71 +569,70 @@ function quebrarTextoCanvas(ctx,text,maxWidth){
   if(linha)linhas.push(linha);
   return linhas.length?linhas:['-'];
 }
-async function criarImagemWhatsApp(r){
-  const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url):[];
-  const imagens=[];
-  for(const foto of fotos){
-    const img=await carregarImagemParaCompartilhar(foto.url);
-    if(img) imagens.push(img);
-  }
-
-  const W=1080;
-  const margem=54;
-  const bubbleX=38;
-  const bubbleW=W-76;
-  const linhasTexto=[
-    `EMPRESA: ${r.empresa||'-'}`,
-    `NFE: ${r.nfe||'-'}`,
-    `CRT: ${r.crt||'-'}`,
-    `MOTORISTA: ${r.motorista||'-'}`,
-    `PLACA: ${r.placa||'-'}`,
-    `LACRE: ${r.lacre||''}`,
-    `VISTORIADO POR: ${r.colaborador||'-'}`,
-    `TÉCNICO: ${r.tecnico||'-'}`,
-    `HORA DA INSPEÇÃO: ${r.hora||'-'}`
-  ];
-
-  const ctxTemp=document.createElement('canvas').getContext('2d');
-  ctxTemp.font='bold 31px Arial';
-  const linhas=[];
-  for(const texto of linhasTexto){
-    const partes=quebrarTextoCanvas(ctxTemp,texto,bubbleW-margem*2);
-    linhas.push(...partes);
-  }
-  const textoAltura=linhas.length*48+46;
-  const fotosAltura=imagens.length?Math.ceil(imagens.length/2)*360+30:0;
-  const H=Math.max(700,72+textoAltura+fotosAltura+72);
-  const canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H;
-  const ctx=canvas.getContext('2d');
-  ctx.fillStyle='#efeae6'; ctx.fillRect(0,0,W,H);
-
-  const radius=30;
-  ctx.fillStyle='#00a884';
-  ctx.beginPath();
-  ctx.moveTo(bubbleX+radius,42); ctx.arcTo(bubbleX+bubbleW,42,bubbleX+bubbleW,42+radius,radius);
-  ctx.arcTo(bubbleX+bubbleW,42+textoAltura,bubbleX+bubbleW-radius,42+textoAltura,radius);
-  ctx.arcTo(bubbleX,42+textoAltura,bubbleX,42+textoAltura-radius,radius);
-  ctx.arcTo(bubbleX,42,bubbleX+radius,42,radius); ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle='#ffffff'; ctx.font='bold 31px Arial';
-  let y=92;
-  for(const linha of linhas){ ctx.fillText(linha,margem,y); y+=48; }
-
-  let fy=42+textoAltura+28;
-  const gap=16, colW=(W-2*margem-gap)/2, photoH=330;
-  for(let i=0;i<imagens.length;i++){
-    const col=i%2, row=Math.floor(i/2);
-    const x=margem+col*(colW+gap), py=fy+row*(photoH+gap);
-    const img=imagens[i];
-    const iw=img.width||1, ih=img.height||1;
-    const scale=Math.min(colW/iw,photoH/ih);
-    const dw=iw*scale, dh=ih*scale;
-    ctx.fillStyle='#ffffff'; ctx.fillRect(x,py,colW,photoH);
-    ctx.drawImage(img,x+(colW-dw)/2,py+(photoH-dh)/2,dw,dh);
-    if(img.close) img.close();
-  }
-  return await new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(new Error('Não foi possível criar a imagem.')),'image/jpeg',0.86));
+function obterRegistrosFotosCompartilhamento(id){
+  const r=window._hatiRegistros?.find(x=>x.id===id);
+  return r&&Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
 }
+
+async function prepararArquivosCompartilhamento(id){
+  if(!id)return [];
+  if(window._hatiShareFiles?.[id])return window._hatiShareFiles[id];
+  if(window._hatiSharePreparing?.[id])return window._hatiSharePreparing[id];
+
+  window._hatiSharePreparing=window._hatiSharePreparing||{};
+  window._hatiShareFiles=window._hatiShareFiles||{};
+  window._hatiSharePreparing[id]=(async()=>{
+    const r=window._hatiRegistros?.find(x=>x.id===id);
+    let fotos=Array.isArray(r?.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
+    try{
+      const locais=await dbGetFotos(id);
+      if(locais?.length){
+        const porKey=new Map(fotos.map(f=>[f.key,f]));
+        for(const row of locais){
+          if(row?.blob){
+            const idx=fotos.findIndex(f=>f.key===row.key);
+            if(idx>=0)fotos[idx]={...fotos[idx],blob:row.blob,local:true};
+            else fotos.push({key:row.key,nome:row.nome||row.key,blob:row.blob,local:true});
+          }
+        }
+      }
+    }catch(e){console.warn('Não foi possível ler fotos locais:',e)}
+
+    const files=[];
+    for(let i=0;i<fotos.length;i++){
+      const foto=fotos[i];
+      try{
+        let blob=foto.blob||null;
+        let url=foto.url||'';
+        if(!blob && foto.path){
+          const pub=sb.storage.from('vistorias-fotos').getPublicUrl(foto.path);
+          if(pub?.data?.publicUrl)url=pub.data.publicUrl;
+        }
+        if(!blob && url){
+          const res=await fetch(url,{mode:'cors',cache:'force-cache'});
+          if(!res.ok)throw new Error('HTTP '+res.status);
+          blob=await res.blob();
+        }
+        if(!blob)continue;
+        const mime=blob.type||'image/jpeg';
+        const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
+        files.push(new File([blob],`vistoria-${String(i+1).padStart(2,'0')}.${ext}`,{type:mime}));
+      }catch(e){console.warn('Foto não preparada para o WhatsApp:',e)}
+    }
+    window._hatiShareFiles[id]=files;
+    delete window._hatiSharePreparing[id];
+    return files;
+  })();
+  return window._hatiSharePreparing[id];
+}
+
+function prepararCompartilhamentoAoAbrir(id){
+  // A preparação acontece enquanto o registro está aberto, antes do toque
+  // no botão. Isso preserva o "user activation" exigido pelo Android/Brave
+  // para navigator.share() com arquivos.
+  prepararArquivosCompartilhamento(id).catch(e=>console.warn('Preparação do WhatsApp:',e));
+}
+
 async function compartilharWhatsApp(id){
   const r=window._hatiRegistros?.find(x=>x.id===id);
   if(!r)return alert('Vistoria não encontrada.');
@@ -673,81 +649,65 @@ async function compartilharWhatsApp(id){
     `HORA DA INSPEÇÃO: ${r.hora||'-'}`
   ].join('\n');
 
-  const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
   const btn=document.activeElement;
   const textoOriginal=btn?.textContent;
   if(btn?.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
 
   try{
-    // Monta os arquivos de foto primeiro (antes de qualquer share), para poder
-    // enviar tudo — texto + fotos — em UMA única chamada de compartilhamento.
-    // Chamar navigator.share() duas vezes seguidas falha em muitos Android,
-    // pois a segunda chamada perde a permissão de gesto do usuário assim que
-    // o WhatsApp assume o controle na primeira.
-    const files=[];
-    for(let i=0;i<fotos.length;i++){
-      const foto=fotos[i];
-      try{
-        let url=foto.url||'';
-        if(foto.path){
-          const pub=sb.storage.from('vistorias-fotos').getPublicUrl(foto.path);
-          if(pub?.data?.publicUrl)url=pub.data.publicUrl;
-        }
-        if(!url)continue;
+    // NÃO fazemos await de fetch/IndexedDB antes do share. Se fizermos isso,
+    // Android/Brave pode perder a ativação do toque e bloquear navigator.share.
+    let files=window._hatiShareFiles?.[id]||null;
 
-        const res=await fetch(url,{mode:'cors',cache:'force-cache'});
-        if(!res.ok)throw new Error('HTTP '+res.status);
-
-        const blob=await res.blob();
-        const mime=blob.type||'image/jpeg';
-        const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
-
-        files.push(new File(
-          [blob],
-          `vistoria-${String(i+1).padStart(2,'0')}.${ext}`,
-          {type:mime}
-        ));
-      }catch(e){
-        console.warn('Foto não preparada para o WhatsApp:',e);
+    if(!files){
+      // Caso o usuário toque muito rápido depois de abrir o registro, termina
+      // a preparação e pede um segundo toque, agora com os arquivos em cache.
+      await prepararArquivosCompartilhamento(id);
+      files=window._hatiShareFiles?.[id]||[];
+      if(files.length){
+        alert('As fotos foram preparadas para o WhatsApp. Toque em ENVIAR WHATSAPP novamente.');
+        return;
       }
+    }
+
+    if(!window.isSecureContext){
+      try{await navigator.clipboard?.writeText(texto)}catch(e){}
+      alert('Para enviar as fotos pelo WhatsApp, abra este sistema pelo endereço HTTPS publicado (ex.: seu domínio/Vercel). O arquivo aberto como content:// pelo Downloads do Android não consegue usar o compartilhamento de arquivos com segurança.');
+      return;
     }
 
     if(!navigator.share){
       try{await navigator.clipboard?.writeText(texto)}catch(e){}
       window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
-      if(fotos.length)alert('O texto foi copiado e o WhatsApp Web foi aberto. Este navegador não envia fotos automaticamente — anexe as fotos manualmente.');
+      alert(files.length?'Seu navegador não oferece compartilhamento de arquivos. Abra o sistema no Chrome/Brave por HTTPS para enviar as fotos junto.':'O texto foi preparado para o WhatsApp.');
       return;
     }
 
-    // Caminho ideal: texto + fotos em um único compartilhamento.
-    if(files.length && navigator.canShare?.({title:'FISCALIZAÇÃO ANIMAL',text:texto,files})){
-      await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto,files});
-      return;
-    }
-
-    // Alguns navegadores aceitam arquivos mas não texto+arquivos juntos:
-    // envia as fotos com uma legenda curta em UM único share.
+    // IMPORTANTE: daqui até navigator.share não existe await. O navegador
+    // mantém a ativação do toque e o Android consegue abrir a folha de share.
     if(files.length && navigator.canShare?.({files})){
-      await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto,files});
+      navigator.share({title:'FISCALIZAÇÃO HATI',text:texto,files}).catch(e=>{
+        if(e?.name!=='AbortError'){
+          console.error('Erro no compartilhamento com fotos:',e);
+          alert('O Android não conseguiu abrir o compartilhamento das fotos. Verifique se o sistema está em HTTPS e tente novamente.');
+        }
+      });
       return;
     }
 
-    // Sem suporte a arquivos: compartilha só o texto e avisa.
-    await navigator.share({title:'FISCALIZAÇÃO ANIMAL',text:texto});
-    if(fotos.length){
-      alert(files.length
-        ? 'A mensagem foi enviada. Este navegador não permite enviar fotos junto com o texto — abra esta página no Chrome do Android para isso.'
-        : 'A mensagem foi enviada, mas não foi possível preparar as fotos (verifique sua conexão).');
-    }
-
+    navigator.share({title:'FISCALIZAÇÃO HATI',text:texto}).catch(e=>{
+      if(e?.name!=='AbortError'){
+        console.error('Erro no compartilhamento:',e);
+        alert('Não foi possível abrir o compartilhamento. Tente novamente.');
+      }
+    });
+    if(files.length)alert('O navegador não aceitou os arquivos para compartilhamento. Abra o sistema pelo Chrome/Brave em HTTPS para enviar as fotos junto.');
   }catch(e){
-    if(e?.name==='AbortError')return;
-    console.error('Erro ao compartilhar no WhatsApp:',e);
-    alert('Não foi possível abrir o compartilhamento. Tente novamente.');
-  }finally{
-    if(btn?.classList.contains('whatsapp-btn')){
-      btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    if(e?.name!=='AbortError'){
+      console.error('Erro ao preparar compartilhamento:',e);
+      alert('Não foi possível preparar as fotos para o WhatsApp. Tente novamente.');
     }
+  }finally{
+    if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
   }
 }
 function gerarPDFVistoria(id){
@@ -762,12 +722,9 @@ function gerarPDFVistoria(id){
   const w=window.open('','_blank','width=900,height=900');
   if(!w)return alert('O navegador bloqueou a janela do PDF. Permita pop-ups para este site.');
   w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Vistoria ${escPdf(r.nfe||r.id)}</title><style>
+/* CSS consolidado na refatoração: regras duplicadas removidas. */
     *{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#17352a;margin:0;background:#fff}.page{max-width:900px;margin:auto;padding:28px}.head{display:flex;align-items:center;gap:18px;border-bottom:3px solid #238b57;padding-bottom:15px;margin-bottom:20px}.head img{width:145px;height:52px;object-fit:contain;background:#000;border-radius:8px}.head h1{font-size:22px;margin:0 0 5px}.head p{margin:0;color:#66756e;font-size:12px}.title{font-size:15px;font-weight:900;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid #dce5df}.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}.field{border:1px solid #dce5df;border-radius:8px;padding:8px 10px;min-height:45px}.field b{display:block;font-size:9px;text-transform:uppercase;color:#66756e;margin-bottom:3px}.field span{font-size:12px;white-space:pre-wrap;word-break:break-word}.photos{display:grid;grid-template-columns:1fr 1fr;gap:14px}.photos figure{margin:0;border:1px solid #dce5df;border-radius:10px;padding:8px;break-inside:avoid}.photos img{display:block;width:100%;height:auto;max-height:430px;object-fit:contain;background:#f4f6f5;border-radius:7px}.photos figcaption{font-size:10px;font-weight:800;margin-top:6px}.footer{margin-top:20px;padding-top:10px;border-top:1px solid #dce5df;font-size:9px;color:#66756e}@media(max-width:600px){.page{padding:15px}.fields,.photos{grid-template-columns:1fr}.head img{width:120px;height:45px}.head h1{font-size:18px}}@media print{body{margin:0}.page{max-width:none;padding:12mm}.no-print{display:none!important}.photos img{max-height:none}}
   
-.product-section .product-grid{grid-template-columns:1fr 1fr;gap:14px 16px}
-.product-section .produto-picker-field{grid-column:1/-1}
-@media(max-width:560px){.product-section .product-grid{grid-template-columns:1fr 1fr}.product-section .produto-picker-field{grid-column:1/-1}}
-@media(max-width:380px){.product-section .product-grid{grid-template-columns:1fr}}
 </style></head><body><div class="page"><div class="head">${logo?`<img src="${escPdf(logo)}" alt="Logo">`:''}<div><h1>FISCALIZAÇÃO HATI</h1><p>RELATÓRIO DE VISTORIA</p></div></div><div class="title">DADOS DA VISTORIA</div><div class="fields">${camposHtml}</div><div class="title">FOTOS DA VISTORIA (${fotos.length})</div><div class="photos">${fotosHtml}</div><div class="footer">Documento gerado pelo sistema FISCALIZAÇÃO HATI · ${new Date().toLocaleString('pt-BR')}</div></div></body></html>`);
   w.document.close();
   const imprimir=()=>setTimeout(()=>{w.focus();w.print();},400);
@@ -787,6 +744,6 @@ function mostrarAba(a,b){
   if(a==='registros')renderRegistros();
 }
 function novoRegistro(){if(confirm('Deseja limpar todos os dados do formulário?'))location.reload()}
-document.getElementById('data').value=new Date().toISOString().slice(0,10);document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();iniciarAutosaveRascunho();(async()=>{await restaurarRascunho();await atualizarDashboard();iniciarNavegacaoHati();if(navigator.onLine)programarSincronizacaoHati()})();
+document.getElementById('data').value=hojeLocalISO();document.getElementById('hora').value=new Date().toTimeString().slice(0,5);configurarFormatosFormulario();initPhotos();atualizarFotos();iniciarAutosaveRascunho();(async()=>{await restaurarRascunho();await atualizarDashboard();iniciarNavegacaoHati();if(navigator.onLine)programarSincronizacaoHati()})();
 </script>
 </body></html>
