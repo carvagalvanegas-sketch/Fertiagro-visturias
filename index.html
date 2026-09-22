@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fiscalização HATI - Vistoria</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>:root{--green:#238b57;--green-dark:#17633e;--green-soft:#e5f3eb;--blue:#2563eb;--blue-soft:#e7f0fa;--yellow:#b7791f;--yellow-soft:#fff6d9;--red:#b94a43;--red-soft:#f9e8e6;--dark:#17352a;--muted:#66756e;--line:#dce5df;--bg:#f3f6f4;}*{box-sizing:border-box}
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fiscalização HATI - Vistoria</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><style>:root{--green:#238b57;--green-dark:#17633e;--green-soft:#e5f3eb;--blue:#2563eb;--blue-soft:#e7f0fa;--yellow:#b7791f;--yellow-soft:#fff6d9;--red:#b94a43;--red-soft:#f9e8e6;--dark:#17352a;--muted:#66756e;--line:#dce5df;--bg:#f3f6f4;}*{box-sizing:border-box}
 
 body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:#18221c}.app{max-width:760px;margin:auto;background:#fff;min-height:100vh}header{background:var(--dark);color:#fff;padding:16px 18px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px #0002}.header-main{display:flex;align-items:center;gap:12px}.logo-mark{width:48px;height:48px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:900;font-size:16px;overflow:hidden}.logo-image{width:145px;height:52px;background:#000;border-radius:8px;flex:none}.logo-image img{width:100%;height:100%;object-fit:contain;display:block}header h1{margin:0;font-size:22px;letter-spacing:.2px;font-weight:800}header p{margin:4px 0 0;color:#b9c2c7;font-size:13px}main{padding:14px}.status{padding:11px 13px;border-radius:10px;background:var(--green-soft);color:var(--green-dark);font-size:13px;margin-bottom:12px;display:none;border:1px solid #c8e7d7}.draft-toast{position:fixed;left:50%;top:18px;transform:translate(-50%,-18px) scale(.98);width:min(92vw,430px);background:#fff;border:1px solid #cfe4d7;border-left:5px solid var(--green);border-radius:16px;box-shadow:0 14px 35px #0002;padding:13px 15px;display:flex;align-items:center;gap:11px;opacity:0;pointer-events:none;z-index:9999;transition:opacity .22s,transform .22s}.draft-toast.show{opacity:1;transform:translate(-50%,0) scale(1)}.draft-toast-icon{width:36px;height:36px;border-radius:11px;background:var(--green-soft);color:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;flex:none}.draft-toast-title{font-size:13px;font-weight:800;color:var(--dark);margin:0}.draft-toast-text{font-size:11px;color:var(--muted);margin:2px 0 0;line-height:1.35}.dashboard{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.metric{border:1px solid var(--line);border-radius:12px;padding:11px 9px;background:#fff;box-shadow:0 2px 7px #00000008}.metric-label{font-size:10px;font-weight:bold;color:var(--muted);line-height:1.15}.metric-value{font-size:21px;font-weight:900;margin-top:4px}.metric.green{background:var(--green-soft);border-color:#c8e7d7}.metric.green .metric-value{color:var(--green-dark)}.metric.yellow{background:var(--yellow-soft);border-color:#ead99b}.metric.yellow .metric-value{color:#8d6a08}.metric.blue{background:var(--blue-soft);border-color:#cbdced}.metric.blue .metric-value{color:#2d619a}.metric.red{background:var(--red-soft);border-color:#ecc7c3}.metric.red .metric-value{color:var(--red)}.tabs{display:flex;gap:8px;margin-bottom:12px}.tab{flex:1;border:1px solid var(--line);background:#f7f8f8;color:var(--muted);padding:11px;border-radius:10px;font-weight:bold;cursor:pointer}.tab.active{background:var(--dark);color:#fff;border-color:var(--dark)}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #0000000b}.card h2{font-size:18px;font-weight:800;margin:0 0 13px;color:var(--dark);display:flex;align-items:center;gap:8px}.section-number{width:24px;height:24px;border-radius:7px;background:var(--green-soft);color:var(--green-dark);display:inline-flex;align-items:center;justify-content:center;font-size:11px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{display:block;font-size:13px;font-weight:700;color:#59656c;margin-bottom:5px;text-transform:uppercase}input,select,textarea{width:100%;padding:11px;border:1px solid #cbd2d6;border-radius:9px;font-size:14px;font-family:Arial,sans-serif;background:#fff;color:var(--dark);outline:none}input:focus,select:focus,textarea:focus{border-color:#75b997;box-shadow:0 0 0 3px #168a5715}textarea{min-height:88px;resize:vertical}.full{grid-column:1/-1}.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.photo-section{padding-bottom:16px}.photo-intro{display:flex;gap:10px;align-items:center;background:#f7faf8;border:1px solid #d9ebe2;border-radius:11px;padding:11px;margin-bottom:12px}.photo-intro-icon{width:38px;height:38px;border-radius:10px;background:var(--green-soft);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}.photo-intro strong{font-size:13px}.photo-intro p{margin:3px 0 0;font-size:11px;color:var(--muted);line-height:1.35}.photo-progress{margin-bottom:13px}.photo-progress>div:first-child{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:bold;margin-bottom:5px}.photo-progress strong{color:var(--green-dark)}.progress-track{height:7px;background:#e8ecee;border-radius:99px;overflow:hidden}.progress-fill{height:100%;width:0;background:var(--green);border-radius:99px;transition:width .25s}.photo-grid-new{grid-template-columns:repeat(2,1fr);gap:10px}.photo-card{position:relative;border:1px solid #d7dee1;border-radius:13px;background:#fff;padding:9px;cursor:pointer;overflow:hidden;transition:.15s}.photo-card input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.photo-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.photo-number{width:24px;height:24px;border-radius:7px;background:#f0f3f4;color:#657177;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900}.photo-check{font-size:18px;color:#a2adb2;line-height:1}.photo-card.done{border-color:#78b998;background:#f4faf7}.photo-card.done .photo-number{background:var(--green-soft);color:var(--green-dark)}.photo-card.done .photo-check{color:var(--green);font-size:15px}.photo-thumb{min-height:120px;border-radius:9px;background:#f2f4f5;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px;position:relative}.photo-thumb .camera-icon{font-size:27px;opacity:.55}.photo-thumb .photo-preview{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:9px;margin:0;display:none}.photo-delete{position:absolute;top:7px;right:7px;width:28px;height:28px;border:0;border-radius:50%;background:#253038e8;color:#fff;font-size:21px;line-height:28px;font-weight:400;display:none;align-items:center;justify-content:center;padding:0;cursor:pointer;z-index:3;box-shadow:0 2px 6px #0005}.photo-delete:active{transform:scale(.94);background:#172026}.photo-card.done .photo-delete{display:flex}.photo-card-title{font-size:12px;font-weight:800;color:var(--dark)}.photo-card-hint{font-size:9px;color:var(--muted);margin-top:3px}.photo-card-extra{grid-column:1/-1}.photo-card-extra .photo-thumb{min-height:92px}.result-status{border-left:4px solid var(--green);padding:10px 12px;background:#f7faf8;border-radius:8px;margin-bottom:10px;font-size:12px;color:#526067}.btn{width:100%;border:0;border-radius:10px;padding:13px;font-weight:700;font-size:14px;font-family:Arial,sans-serif;cursor:pointer}.primary{background:var(--green);color:white}.secondary{background:var(--dark);color:white;margin-top:8px}.danger{background:#fff;color:var(--red);border:1px solid #e5b9b5;margin-top:8px}.toolbar{display:flex;gap:8px;margin-bottom:10px}.toolbar input{flex:1}.toolbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:10px 12px;font-weight:700;font-family:Arial,sans-serif;font-size:14px}.records-empty{border:1px dashed #cbd2d6;border-radius:12px;padding:18px;text-align:center;color:var(--muted);font-size:13px}.footer{text-align:center;padding:10px 0 25px;color:#78838a;font-size:11px}.records-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}.records-photos img{width:100%;height:90px;object-fit:contain;background:#f2f4f5;border-radius:7px;cursor:pointer;display:block}.record-photo-placeholder{width:100%;height:90px;border-radius:7px;background:#f2f4f5;display:flex;align-items:center;justify-content:center;color:#69757c;font-size:10px;font-weight:bold;cursor:pointer}.record-photo-placeholder.loaded{display:block}.record-photo-placeholder img{width:100%;height:90px;object-fit:contain;border-radius:7px}.photo-modal{position:fixed;inset:0;background:#000d;z-index:9999;display:none;align-items:center;justify-content:center;padding:15px}.photo-modal.open{display:flex}.photo-modal img{max-width:96vw;max-height:90vh;object-fit:contain}.photo-modal-loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:#fff;font-size:13px;font-weight:900;letter-spacing:.2px;background:#172026cc;padding:10px 14px;border-radius:10px}.photo-modal-close{position:absolute;top:12px;right:14px;width:42px;height:42px;border:0;border-radius:50%;background:#fff;color:#172026;font-size:25px;font-weight:bold}.photo-actions{display:flex;gap:6px;margin-top:7px}.photo-actions button{flex:1;padding:8px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:10px;font-weight:bold}@media(max-width:760px){.app{max-width:100%;}.app main{max-width:none;margin:0}.record-grid{grid-template-columns:1fr 1fr}.record-field span{font-size:14px}.record-field b{font-size:9px}.record-details{padding:10px}} @media(max-width:420px){.record-grid{grid-template-columns:1fr 1fr}.record-field{padding:8px}.record-field span{font-size:13px}} .multi-photo-group{display:grid;grid-template-columns:1fr 1fr;gap:10px;grid-column:1/-1}.multi-photo-add{grid-column:1/-1;width:100%;border:1px dashed #8fbea6;background:#f3faf6;color:#17633e;border-radius:10px;padding:12px;font-size:11px;font-weight:950;cursor:pointer}.multi-photo-group .photo-card{min-width:0}.multi-photo-group .photo-card:first-child{}.multi-photo-group .photo-card-title{font-size:12px}@media(max-width:560px){.multi-photo-group{grid-template-columns:1fr 1fr}}@media(max-width:380px){.multi-photo-group{grid-template-columns:1fr}}@media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}.record-edit-grid{grid-template-columns:1fr 1fr}.record-summary{padding:11px}.record-status{padding:6px 8px}}@media(max-width:380px){.grid,.photo-grid,.record-edit-grid{grid-template-columns:1fr}.record-field.full,.record-edit-grid .full{grid-column:1}header h1{font-size:19px}main{padding:10px}}@media print{body.modal-open{overflow:hidden}
 body{background:#fff}.app{max-width:none}.no-print{display:none!important}header{position:static;box-shadow:none}.card{box-shadow:none;break-inside:avoid}}
@@ -16,7 +16,7 @@ input,select,textarea{border-color:#d3ded8;border-radius:10px;background:#fff}in
 .toolbar{background:#edf3ef;padding:5px;border-radius:12px}.toolbar input{border:0;background:transparent;box-shadow:none}.toolbar button{border:0;background:#fff}
 .records-card{background:#fff;border:1px solid #dfe7e2;border-radius:16px;overflow:hidden}.records-month{font-size:11px;font-weight:900;color:#53645b;letter-spacing:.7px;padding:14px 5px 8px;border-bottom:1px solid #e6ece8}.record-row{border:1px solid #dfe7e2;border-radius:13px;margin:8px 0;background:#fff;overflow:hidden;box-shadow:0 2px 8px #17352a08}.record-summary{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:13px 12px;cursor:pointer}.record-main{min-width:0}.record-plate{font-size:15px;font-weight:950;color:#17352a;letter-spacing:.15px}.record-sub{font-size:11px;color:#68766f;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.record-status{font-size:10px;font-weight:950;border-radius:999px;padding:7px 10px;white-space:nowrap}.record-ver{font-size:10px;font-weight:950;color:#238b57;margin-left:7px}.record-status-select{border:0;outline:0;appearance:auto;cursor:pointer;font-size:10px;font-weight:950;border-radius:999px;padding:7px 9px;max-width:155px}.record-status-select:disabled{opacity:.6;cursor:wait}@media(max-width:560px){.record-summary{grid-template-columns:minmax(0,1fr) auto}.record-status-select{max-width:135px;font-size:9px;padding:7px 8px}}.record-details{display:none;border-top:1px solid #e5ece8;padding:12px;background:#fbfcfb}.record-row.open .record-details{display:block}.record-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.record-field{background:#f0f5f2;border:1px solid #e0e9e3;border-radius:9px;padding:9px;min-width:0}.record-field b{display:block;font-size:9px;color:#718078;text-transform:uppercase;margin-bottom:4px;letter-spacing:.35px}.record-field span{font-size:13px;font-weight:800;color:#24352d;overflow-wrap:anywhere}.record-field.full{grid-column:1/-1}.whatsapp-btn{border:0;border-radius:10px;padding:11px 13px;background:#1fa463;color:#fff;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 3px 10px rgba(31,164,99,.18)}
 .whatsapp-btn:active{transform:scale(.98)}
-.pdf-btn{flex:1;background:#eef7f2;color:#17633e;border:1px solid #b9d9c8;border-radius:8px;padding:9px 10px;font-size:10px;font-weight:950;cursor:pointer}.record-actions{display:flex;gap:7px;margin-top:11px}.record-actions button{flex:1;border:1px solid #d6e1da;background:#fff;color:#294038;border-radius:9px;padding:10px;font-size:11px;font-weight:950}.record-actions .edit-btn{background:#17352a;color:#fff;border-color:#17352a}.records-photos{display:flex;flex-direction:column;gap:7px;margin-top:9px}.record-photo-item{display:block;border:1px solid #dce5df;background:#fff;border-radius:10px;overflow:hidden}.record-photo-name{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;border:0;background:#fff;text-align:left;padding:6px;cursor:pointer}.record-photo-name:active{background:#edf5f0}.record-photo-mobile-label{display:block;padding:7px 8px;font-size:13px;font-weight:900;color:#263a31}.record-photo-thumb{display:none;width:100%;height:150px;object-fit:contain;background:#f2f4f5;border-radius:7px}.record-photo-hint{display:none;color:#718078;font-size:10px;font-weight:800;padding:4px 8px 7px}.record-photo-open{display:none}.record-photo-edit{display:flex;align-items:center;gap:7px}.record-photo-edit input{display:none}.record-photo-edit button{border:1px solid #d6e1da;background:#fff;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900}.record-photo-add{margin-top:8px;border:1px dashed #a9c7b6;background:#f5faf7;color:#17633e;border-radius:9px;padding:10px;width:100%;font-size:10px;font-weight:950}.record-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.record-edit-grid .full{grid-column:1/-1}.record-edit-grid label{margin-bottom:4px}.record-edit-grid input,.record-edit-grid select,.record-edit-grid textarea{box-sizing:border-box;font-size:13px;padding:10px}.edit-title{font-size:12px;font-weight:950;color:#17352a;margin-bottom:9px}.photo-edit-section{margin-top:13px;padding-top:11px;border-top:1px solid #e0e9e3}.photo-edit-section h3{font-size:12px;margin:0 0 8px;color:#17352a}.photo-edit-list{display:flex;flex-direction:column;gap:6px}.photo-edit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #dce5df;border-radius:9px;padding:8px}.photo-edit-row strong{font-size:11px;color:#263a31}.photo-edit-row small{display:block;color:#7a8780;font-size:9px;margin-top:2px}.photo-edit-row button,.photo-edit-row label{font-size:9px!important;font-weight:900!important;text-transform:none!important;margin:0!important;padding:7px 8px!important;border:1px solid #d6e1da!important;border-radius:7px!important;background:#fff!important;color:#294038!important;white-space:nowrap}.photo-edit-row input{display:none}.photo-edit-view{border:0;background:transparent;padding:9px 0;text-align:left;font-size:12px;font-weight:900;color:#263a31;flex:1;cursor:pointer}.photo-edit-row{display:flex;align-items:center;gap:8px}.photo-edit-new{margin-top:7px}.quick-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 11px;background:#f4f8f5;border:1px solid #dce8e0;border-radius:10px}.quick-status b{display:block;font-size:9px;color:#718078;letter-spacing:.4px}.quick-status .record-current-status{display:block;font-size:12px;font-weight:900;color:#17352a;margin-top:3px}.quick-status select{width:auto;min-width:155px;padding:8px 9px;font-size:11px;font-weight:800;border-radius:8px}@media(min-width:761px){.record-photo-name{display:block;padding:6px}.record-photo-mobile-label{display:none}.record-photo-thumb{display:block}.record-photo-hint{display:block}.record-photo-item{background:#f8faf9}}@media(max-width:760px){.record-photo-thumb{display:none!important}.record-photo-mobile-label{display:block}.record-photo-hint{display:none}.record-photo-name{min-height:48px}}@media(max-width:560px){.quick-status{align-items:stretch;flex-direction:column}.quick-status select{width:100%;min-width:0}}.photo-modal{background:#10231ddd}
+.pdf-btn{flex:1;background:#eef7f2;color:#17633e;border:1px solid #b9d9c8;border-radius:8px;padding:9px 10px;font-size:10px;font-weight:950;cursor:pointer}.record-actions{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}.record-actions button{flex:1;border:1px solid #d6e1da;background:#fff;color:#294038;border-radius:9px;padding:10px;font-size:11px;font-weight:950}.record-actions .edit-btn{background:#17352a;color:#fff;border-color:#17352a}.records-photos{display:flex;flex-direction:column;gap:7px;margin-top:9px}.record-photo-item{display:block;border:1px solid #dce5df;background:#fff;border-radius:10px;overflow:hidden}.record-photo-name{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:48px;border:0;background:#fff;text-align:left;padding:6px;cursor:pointer}.record-photo-name:active{background:#edf5f0}.record-photo-mobile-label{display:block;padding:7px 8px;font-size:13px;font-weight:900;color:#263a31}.record-photo-thumb{display:none;width:100%;height:150px;object-fit:contain;background:#f2f4f5;border-radius:7px}.record-photo-hint{display:none;color:#718078;font-size:10px;font-weight:800;padding:4px 8px 7px}.record-photo-open{display:none}.record-photo-edit{display:flex;align-items:center;gap:7px}.record-photo-edit input{display:none}.record-photo-edit button{border:1px solid #d6e1da;background:#fff;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900}.record-photo-add{margin-top:8px;border:1px dashed #a9c7b6;background:#f5faf7;color:#17633e;border-radius:9px;padding:10px;width:100%;font-size:10px;font-weight:950}.record-edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.record-edit-grid .full{grid-column:1/-1}.record-edit-grid label{margin-bottom:4px}.record-edit-grid input,.record-edit-grid select,.record-edit-grid textarea{box-sizing:border-box;font-size:13px;padding:10px}.edit-title{font-size:12px;font-weight:950;color:#17352a;margin-bottom:9px}.photo-edit-section{margin-top:13px;padding-top:11px;border-top:1px solid #e0e9e3}.photo-edit-section h3{font-size:12px;margin:0 0 8px;color:#17352a}.photo-edit-list{display:flex;flex-direction:column;gap:6px}.photo-edit-row{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #dce5df;border-radius:9px;padding:8px}.photo-edit-row strong{font-size:11px;color:#263a31}.photo-edit-row small{display:block;color:#7a8780;font-size:9px;margin-top:2px}.photo-edit-row button,.photo-edit-row label{font-size:9px!important;font-weight:900!important;text-transform:none!important;margin:0!important;padding:7px 8px!important;border:1px solid #d6e1da!important;border-radius:7px!important;background:#fff!important;color:#294038!important;white-space:nowrap}.photo-edit-row input{display:none}.photo-edit-view{border:0;background:transparent;padding:9px 0;text-align:left;font-size:12px;font-weight:900;color:#263a31;flex:1;cursor:pointer}.photo-edit-row{display:flex;align-items:center;gap:8px}.photo-edit-new{margin-top:7px}.quick-status{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;padding:10px 11px;background:#f4f8f5;border:1px solid #dce8e0;border-radius:10px}.quick-status b{display:block;font-size:9px;color:#718078;letter-spacing:.4px}.quick-status .record-current-status{display:block;font-size:12px;font-weight:900;color:#17352a;margin-top:3px}.quick-status select{width:auto;min-width:155px;padding:8px 9px;font-size:11px;font-weight:800;border-radius:8px}@media(min-width:761px){.record-photo-name{display:block;padding:6px}.record-photo-mobile-label{display:none}.record-photo-thumb{display:block}.record-photo-hint{display:block}.record-photo-item{background:#f8faf9}}@media(max-width:760px){.record-photo-thumb{display:none!important}.record-photo-mobile-label{display:block}.record-photo-hint{display:none}.record-photo-name{min-height:48px}}@media(max-width:560px){.quick-status{align-items:stretch;flex-direction:column}.quick-status select{width:100%;min-width:0}}.photo-modal{background:#10231ddd}
 @media(max-width:560px){.dashboard{grid-template-columns:1fr 1fr}.record-grid{grid-template-columns:1fr}.record-field.full{grid-column:auto}.logo-image{width:125px;height:46px}main{padding:11px}.card{padding:13px}}
 @media(max-width:380px){.logo-image{width:112px;height:44px}header h1{font-size:18px}}
 
@@ -498,7 +498,7 @@ async function renderRegistros(){
           <div class="quick-status"><div><b>STATUS DA VISTORIA</b><span class="record-current-status">${esc(x.status||'Sem status')}</span></div><select aria-label="Alterar status" onchange="alterarStatus('${esc(x.id)}',this)"><option value="Aguardando análise" ${x.status==='Aguardando análise'?'selected':''}>Aguardando análise</option><option value="Liberado" ${x.status==='Liberado'?'selected':''}>Liberado</option><option value="Pendente" ${x.status==='Pendente'?'selected':''}>Pendente</option><option value="Não conforme" ${x.status==='Não conforme'?'selected':''}>Não conforme</option></select></div>
           <div style="font-size:10px;font-weight:950;color:#53645b;margin-top:12px">📷 ${fotos.length} ${fotos.length===1?'FOTO':'FOTOS'}</div>
           ${photosHtml}
-          <div class="record-actions"><button type="button" class="whatsapp-btn" onclick="compartilharWhatsApp('${esc(x.id)}')">📲 ENVIAR WHATSAPP</button><button type="button" class="pdf-btn" onclick="gerarPDFVistoria('${esc(x.id)}')">📄 FAZER PDF</button><button type="button" class="edit-btn" onclick="abrirEdicao('${esc(x.id)}')">✎ EDITAR VISTORIA</button></div>
+          <div class="record-actions"><button type="button" class="whatsapp-btn" onclick="compartilharWhatsApp('${esc(x.id)}')">📲 ENVIAR WHATSAPP</button><button type="button" class="pdf-btn" onclick="gerarPDFVistoria('${esc(x.id)}')">📄 FAZER PDF</button><button type="button" class="download-photos-btn" data-download-fotos="${esc(x.id)}" onclick="baixarTodasFotos('${esc(x.id)}')">⬇️ BAIXAR FOTOS (${fotos.length})</button><button type="button" class="edit-btn" onclick="abrirEdicao('${esc(x.id)}')">✎ EDITAR VISTORIA</button></div>
         </div>
       </div>`;
     }
@@ -574,6 +574,30 @@ function obterRegistrosFotosCompartilhamento(id){
   return r&&Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
 }
 
+async function prepararArquivoParaShare(blob,index){
+  if(!blob)return null;
+  try{
+    // O Android pode recusar um conjunto grande de fotos no Web Share.
+    // Reduzimos cada imagem para um tamanho adequado ao WhatsApp antes do share.
+    const tipo=blob.type||'image/jpeg';
+    let foto=blob;
+    if(blob.size>350*1024 || tipo!=='image/jpeg'){
+      foto=await comprimirFoto(blob,960,0.45);
+    }
+    const mime=foto.type||'image/jpeg';
+    return new File(
+      [foto],
+      `vistoria-${String(index+1).padStart(2,'0')}.jpg`,
+      {type:'image/jpeg',lastModified:Date.now()}
+    );
+  }catch(e){
+    console.warn('Não foi possível comprimir a foto para o WhatsApp:',e);
+    try{
+      return new File([blob],`vistoria-${String(index+1).padStart(2,'0')}.jpg`,{type:'image/jpeg'});
+    }catch(_){return null}
+  }
+}
+
 async function prepararArquivosCompartilhamento(id){
   if(!id)return [];
   if(window._hatiShareFiles?.[id])return window._hatiShareFiles[id];
@@ -587,13 +611,11 @@ async function prepararArquivosCompartilhamento(id){
     try{
       const locais=await dbGetFotos(id);
       if(locais?.length){
-        const porKey=new Map(fotos.map(f=>[f.key,f]));
         for(const row of locais){
-          if(row?.blob){
-            const idx=fotos.findIndex(f=>f.key===row.key);
-            if(idx>=0)fotos[idx]={...fotos[idx],blob:row.blob,local:true};
-            else fotos.push({key:row.key,nome:row.nome||row.key,blob:row.blob,local:true});
-          }
+          if(!row?.blob)continue;
+          const idx=fotos.findIndex(f=>f.key===row.key);
+          if(idx>=0)fotos[idx]={...fotos[idx],blob:row.blob,local:true};
+          else fotos.push({key:row.key,nome:row.nome||row.key,blob:row.blob,local:true});
         }
       }
     }catch(e){console.warn('Não foi possível ler fotos locais:',e)}
@@ -613,10 +635,8 @@ async function prepararArquivosCompartilhamento(id){
           if(!res.ok)throw new Error('HTTP '+res.status);
           blob=await res.blob();
         }
-        if(!blob)continue;
-        const mime=blob.type||'image/jpeg';
-        const ext=mime.includes('png')?'png':mime.includes('webp')?'webp':'jpg';
-        files.push(new File([blob],`vistoria-${String(i+1).padStart(2,'0')}.${ext}`,{type:mime}));
+        const file=await prepararArquivoParaShare(blob,i);
+        if(file)files.push(file);
       }catch(e){console.warn('Foto não preparada para o WhatsApp:',e)}
     }
     window._hatiShareFiles[id]=files;
@@ -631,6 +651,61 @@ function prepararCompartilhamentoAoAbrir(id){
   // no botão. Isso preserva o "user activation" exigido pelo Android/Brave
   // para navigator.share() com arquivos.
   prepararArquivosCompartilhamento(id).catch(e=>console.warn('Preparação do WhatsApp:',e));
+}
+
+async function baixarTodasFotos(id){
+  const r=window._hatiRegistros?.find(x=>x.id===id);
+  if(!r)return alert('Vistoria não encontrada.');
+  const fotos=Array.isArray(r.fotos)?r.fotos.filter(f=>f?.url||f?.path):[];
+  if(!fotos.length)return alert('Esta vistoria não possui fotos para baixar.');
+  if(typeof JSZip==='undefined')return alert('Não foi possível carregar o módulo de download. Verifique sua conexão e tente novamente.');
+  const btn=document.querySelector(`[data-download-fotos="${CSS.escape(String(id))}"]`);
+  const original=btn?.textContent||'⬇️ BAIXAR TODAS AS FOTOS';
+  if(btn){btn.disabled=true;btn.textContent=`⏳ 0/${fotos.length}`;}
+  try{
+    const zip=new JSZip();
+    const pasta=zip.folder(`fotos-vistoria-${String(r.nfe||r.id).replace(/[^a-zA-Z0-9_-]/g,'_')}`);
+    let baixadas=0;
+    for(let i=0;i<fotos.length;i++){
+      const foto=fotos[i];
+      try{
+        let url=foto.url||'';
+        if(foto.path){
+          const pub=sb.storage.from('vistorias-fotos').getPublicUrl(foto.path);
+          if(pub?.data?.publicUrl)url=pub.data.publicUrl;
+        }
+        if(!url)throw new Error('URL da foto ausente');
+        const res=await fetch(url,{mode:'cors',cache:'force-cache'});
+        if(!res.ok)throw new Error(`HTTP ${res.status}`);
+        const blob=await res.blob();
+        const ext=(blob.type||'image/jpeg').includes('png')?'png':(blob.type||'').includes('webp')?'webp':'jpg';
+        const nomeBase=String(foto.nome_exibicao||foto.key||`foto-${i+1}`).replace(/[^a-zA-Z0-9À-ÿ._-]+/g,'_').replace(/^_+|_+$/g,'')||`foto-${i+1}`;
+        pasta.file(`${String(i+1).padStart(3,'0')}-${nomeBase.replace(/\.(jpg|jpeg|png|webp)$/i,'')}.${ext}`,blob);
+        baixadas++;
+      }catch(e){
+        console.warn(`Não foi possível baixar a foto ${i+1}:`,e);
+      }
+      if(btn)btn.textContent=`⏳ ${i+1}/${fotos.length}`;
+    }
+    if(!baixadas)throw new Error('Nenhuma foto pôde ser baixada.');
+    if(btn)btn.textContent='⏳ GERANDO ZIP...';
+    const zipBlob=await zip.generateAsync({type:'blob',compression:'STORE'},meta=>{
+      if(btn)btn.textContent=`⏳ ZIP ${Math.round(meta.percent)}%`;
+    });
+    const url=URL.createObjectURL(zipBlob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`fotos-vistoria-${String(r.nfe||r.id).replace(/[^a-zA-Z0-9_-]/g,'_')}.zip`;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+    if(btn)btn.textContent=`✓ ${baixadas}/${fotos.length} FOTOS BAIXADAS`;
+    setTimeout(()=>{if(btn){btn.textContent=original;btn.disabled=false}},2500);
+    if(baixadas<fotos.length)alert(`${baixadas} de ${fotos.length} fotos foram colocadas no ZIP. ${fotos.length-baixadas} não puderam ser baixadas.`);
+  }catch(e){
+    console.error('Erro ao baixar fotos:',e);
+    alert('Não foi possível gerar o arquivo com as fotos. Tente novamente.');
+    if(btn){btn.textContent=original;btn.disabled=false;}
+  }
 }
 
 async function compartilharWhatsApp(id){
@@ -653,63 +728,117 @@ async function compartilharWhatsApp(id){
   const textoOriginal=btn?.textContent;
   if(btn?.classList.contains('whatsapp-btn'))btn.textContent='⏳ PREPARANDO...';
 
-  try{
-    // NÃO fazemos await de fetch/IndexedDB antes do share. Se fizermos isso,
-    // Android/Brave pode perder a ativação do toque e bloquear navigator.share.
-    let files=window._hatiShareFiles?.[id]||null;
+  // Se as fotos ainda não estiverem prontas, NÃO tentamos preparar durante
+  // o toque. A preparação é feita ao abrir o registro; aqui só usamos o cache.
+  let files=window._hatiShareFiles?.[id]||[];
 
-    if(!files){
-      // Caso o usuário toque muito rápido depois de abrir o registro, termina
-      // a preparação e pede um segundo toque, agora com os arquivos em cache.
-      await prepararArquivosCompartilhamento(id);
-      files=window._hatiShareFiles?.[id]||[];
-      if(files.length){
-        alert('As fotos foram preparadas para o WhatsApp. Toque em ENVIAR WHATSAPP novamente.');
-        return;
-      }
-    }
-
-    if(!window.isSecureContext){
-      try{await navigator.clipboard?.writeText(texto)}catch(e){}
-      alert('Para enviar as fotos pelo WhatsApp, abra este sistema pelo endereço HTTPS publicado (ex.: seu domínio/Vercel). O arquivo aberto como content:// pelo Downloads do Android não consegue usar o compartilhamento de arquivos com segurança.');
-      return;
-    }
-
-    if(!navigator.share){
-      try{await navigator.clipboard?.writeText(texto)}catch(e){}
-      window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
-      alert(files.length?'Seu navegador não oferece compartilhamento de arquivos. Abra o sistema no Chrome/Brave por HTTPS para enviar as fotos junto.':'O texto foi preparado para o WhatsApp.');
-      return;
-    }
-
-    // IMPORTANTE: daqui até navigator.share não existe await. O navegador
-    // mantém a ativação do toque e o Android consegue abrir a folha de share.
-    if(files.length && navigator.canShare?.({files})){
-      navigator.share({title:'FISCALIZAÇÃO HATI',text:texto,files}).catch(e=>{
-        if(e?.name!=='AbortError'){
-          console.error('Erro no compartilhamento com fotos:',e);
-          alert('O Android não conseguiu abrir o compartilhamento das fotos. Verifique se o sistema está em HTTPS e tente novamente.');
-        }
-      });
-      return;
-    }
-
-    navigator.share({title:'FISCALIZAÇÃO HATI',text:texto}).catch(e=>{
-      if(e?.name!=='AbortError'){
-        console.error('Erro no compartilhamento:',e);
-        alert('Não foi possível abrir o compartilhamento. Tente novamente.');
-      }
-    });
-    if(files.length)alert('O navegador não aceitou os arquivos para compartilhamento. Abra o sistema pelo Chrome/Brave em HTTPS para enviar as fotos junto.');
-  }catch(e){
-    if(e?.name!=='AbortError'){
-      console.error('Erro ao preparar compartilhamento:',e);
-      alert('Não foi possível preparar as fotos para o WhatsApp. Tente novamente.');
-    }
-  }finally{
+  if(!window.isSecureContext){
+    try{await navigator.clipboard?.writeText(texto)}catch(e){}
+    alert('Abra o sistema pelo endereço HTTPS publicado para compartilhar as fotos.');
     if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    return;
+  }
+
+  if(!navigator.share){
+    try{await navigator.clipboard?.writeText(texto)}catch(e){}
+    window.open('https://wa.me/?text='+encodeURIComponent(texto),'_blank');
+    alert(files.length?'Este navegador não suporta envio de fotos pelo compartilhamento. Use Chrome/Brave no Android.':'O texto foi preparado para o WhatsApp.');
+    if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+    return;
+  }
+
+  // A chamada a navigator.share precisa acontecer diretamente no toque.
+  // As fotos já foram reduzidas/preparadas antes, para evitar que o Android
+  // perca a ativação do gesto.
+  if(files.length){
+    // Primeiro tentamos enviar TODAS as fotos de uma vez. Não existe um
+    // limite fixo de arquivos definido pelo Web Share: Android/WhatsApp
+    // decide conforme a versão e o tamanho total do pacote.
+    if(navigator.canShare?.({files})){
+      try{
+        await navigator.share({title:'FISCALIZAÇÃO HATI',text:texto,files});
+        console.log(`Compartilhadas ${files.length} foto(s).`);
+        if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+        return;
+      }catch(e){
+        if(e?.name==='AbortError'){
+          if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+          return;
+        }
+        console.warn('Android recusou o pacote completo:',e);
+      }
+
+      // Segunda tentativa: somente as fotos. Isso resolve casos em que o
+      // WhatsApp aceita muitos arquivos, mas rejeita texto + arquivos.
+      try{await navigator.clipboard?.writeText(texto)}catch(_e){}
+      try{
+        await navigator.share({title:'FISCALIZAÇÃO HATI',files});
+        if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+        return;
+      }catch(e2){
+        if(e2?.name==='AbortError'){
+          if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+          return;
+        }
+        console.warn('Android recusou também somente as fotos:',e2);
+      }
+
+      // Fallback realista para 25, 50 ou mais fotos: o navegador não pode
+      // abrir vários navigator.share() automaticamente, porque cada chamada
+      // precisa de uma nova ação do usuário. Por isso oferecemos lotes sem
+      // perder nenhuma foto. O tamanho é adaptativo e começa com 10.
+      const lote=10;
+      const total=Math.ceil(files.length/lote);
+      const ok=confirm(`O Android recusou as ${files.length} fotos em um único envio.\n\nPosso dividir automaticamente em ${total} lotes de até ${lote} fotos.\nVocê tocará em OK para cada lote.\n\nNenhuma foto será perdida.`);
+      if(ok){
+        try{await navigator.clipboard?.writeText(texto)}catch(_e){}
+        window._hatiShareBatches={id,index:0,files,texto,lote,total};
+        mostrarProximoLoteWhatsApp();
+      }
+      if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+      return;
+    }
+  }
+
+  // Sem suporte a arquivos: pelo menos abre o WhatsApp com a ficha textual.
+  navigator.share({title:'FISCALIZAÇÃO HATI',text:texto}).catch(e=>{
+    if(e?.name!=='AbortError')alert('Não foi possível abrir o compartilhamento. Tente novamente.');
+  });
+  if(files.length){
+    alert('O navegador não aceitou as fotos para compartilhamento. Tente pelo Chrome ou Brave atualizado no Android.');
+  }
+  if(btn?.classList.contains('whatsapp-btn'))btn.textContent=textoOriginal||'📲 ENVIAR WHATSAPP';
+}
+
+async function mostrarProximoLoteWhatsApp(){
+  const b=window._hatiShareBatches;
+  if(!b)return;
+  if(b.index>=b.total){
+    window._hatiShareBatches=null;
+    alert(`✓ Todas as ${b.files.length} fotos foram enviadas.`);
+    return;
+  }
+  const inicio=b.index*b.lote;
+  const grupo=b.files.slice(inicio,inicio+b.lote);
+  const numero=b.index+1;
+  const ultima=b.index===b.total-1;
+  const continuar=confirm(`Lote ${numero}/${b.total}: ${grupo.length} fotos.\n\nToque em OK para abrir o WhatsApp e enviar este lote.`);
+  if(!continuar){window._hatiShareBatches=null;return;}
+  try{
+    await navigator.share({title:`FISCALIZAÇÃO HATI — lote ${numero}/${b.total}`,text:ultima?b.texto:`FISCALIZAÇÃO HATI — lote ${numero}/${b.total}`,files:grupo});
+    b.index++;
+    if(b.index<b.total){
+      setTimeout(mostrarProximoLoteWhatsApp,250);
+    }else{
+      window._hatiShareBatches=null;
+      alert(`✓ Todas as ${b.files.length} fotos foram enviadas.`);
+    }
+  }catch(e){
+    if(e?.name==='AbortError')return;
+    alert(`Não foi possível enviar o lote ${numero}. Tente novamente.`);
   }
 }
+
 function gerarPDFVistoria(id){
   const r=window._hatiRegistros?.find(x=>x.id===id);
   if(!r)return alert('Vistoria não encontrada.');
