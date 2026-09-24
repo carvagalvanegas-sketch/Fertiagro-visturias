@@ -397,7 +397,7 @@ function programarSincronizacaoHati(){
 function iniciarAutosaveRascunho(){
   document.querySelectorAll('#abaNova input:not([type="file"]),#abaNova select,#abaNova textarea').forEach(el=>{el.addEventListener('input',()=>salvarRascunho());el.addEventListener('change',()=>salvarRascunho())});
   window.addEventListener('beforeunload',limparVistoriasVaziasAoSair);
-  window.addEventListener('online',()=>{const st=document.getElementById('status');if(st){st.textContent='Internet voltou. Sincronizando dados e fotos...';st.style.display='block'}programarSincronizacaoHati()});
+  window.addEventListener('online',()=>{const st=document.getElementById('status');if(st){st.textContent='🌐 Internet voltou. A vistoria está segura no dispositivo. Tentando sincronizar...';st.style.display='block'}programarSincronizacaoHati()});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&navigator.onLine)programarSincronizacaoHati()});
 }
 const produtosDisponiveis=[
