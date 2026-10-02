@@ -2029,18 +2029,36 @@ function hatiPdfStatus(id){
   return document.getElementById('hati-draft-pdf-feedback');
 }
 async function hatiBaixarRelatorio(recordProvider,button,status){
-  if(hatiPdfBusy)return;hatiPdfBusy=true;hatiRecordActionBusy(button,true,'Preparando PDF…');
-  const message=text=>{if(status)status.textContent=text;hatiRecordActionBusy(button,true,text);};
+  if(hatiPdfBusy)return;
+  hatiPdfBusy=true;
+  // No Android, o download automático depois de vários awaits pode perder o gesto do usuário.
+  // Abrimos a janela de forma síncrona e só navegamos para o PDF quando ele estiver pronto.
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  let pdfWindow=null;
+  if(isMobile){try{pdfWindow=window.open('about:blank','_blank');if(pdfWindow){pdfWindow.document.title='Preparando PDF…';pdfWindow.document.body.innerHTML='<p style="font-family:Arial,sans-serif;padding:20px">Preparando PDF…</p>';}}catch(e){pdfWindow=null;}}
+  hatiRecordActionBusy(button,true,'Preparando PDF…');
+  const message=text=>{if(status)status.textContent=text;hatiRecordActionBusy(button,true,text);if(pdfWindow&&!pdfWindow.closed){try{pdfWindow.document.body.innerHTML='<p style="font-family:Arial,sans-serif;padding:20px">'+String(text).replace(/[<>&]/g,m=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[m]))+'</p>';}catch(e){}}};
   try{
     message('Preparando dados da vistoria…');const r=await recordProvider();if(!r)throw new Error('Vistoria não encontrada.');
     const blob=await hatiCriarPdf(r,f=>f.blob||hatiObterFoto(r.id,f),message);
     if(hatiPdfDownload){URL.revokeObjectURL(hatiPdfDownload.url);hatiPdfDownload.link?.remove();}
-    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=hatiPdfNome(r);a.textContent='Baixar PDF novamente';
-    hatiPdfDownload={url,link:a};message('PDF pronto. Abra o arquivo baixado e escolha Imprimir.');
-    if(status){const links=document.createElement('span');links.className='hati-wa-links';links.appendChild(a);status.appendChild(links);}else document.body.appendChild(a);
-    a.click();if(!status)a.remove();
-  }catch(e){message('PDF não gerado: '+(e.message||'erro ao preparar todas as fotos')+'. Tente novamente.');if(!status)alert('PDF não gerado: '+e.message);}
-  finally{hatiPdfBusy=false;hatiRecordActionBusy(button,false);}
+    const url=URL.createObjectURL(blob),a=document.createElement('a');
+    a.href=url;a.download=hatiPdfNome(r);a.textContent='BAIXAR PDF NOVAMENTE';a.target='_blank';a.rel='noopener';
+    hatiPdfDownload={url,link:a};
+    if(pdfWindow&&!pdfWindow.closed){
+      pdfWindow.location.href=url;
+      message('PDF pronto.');
+    }else{
+      message('PDF pronto. Toque em BAIXAR PDF NOVAMENTE para abrir o arquivo.');
+      if(status){const links=document.createElement('span');links.className='hati-wa-links';links.appendChild(a);status.appendChild(links);}else document.body.appendChild(a);
+      // Em desktop o clique continua sendo automático; em Android o link visível é o fallback.
+      if(!isMobile){a.click();if(!status)a.remove();}
+    }
+  }catch(e){
+    if(pdfWindow&&!pdfWindow.closed)pdfWindow.close();
+    message('PDF não gerado: '+(e.message||'erro ao preparar o PDF')+'. Tente novamente.');
+    if(!status)alert('PDF não gerado: '+(e.message||'erro ao preparar o PDF'));
+  }finally{hatiPdfBusy=false;hatiRecordActionBusy(button,false);}
 }
 async function gerarPDFVistoria(id){
   const button=document.getElementById('rec-'+id)?.querySelector('[data-action="pdf"]');
@@ -2149,7 +2167,7 @@ function hatiWhatsAppButton(id){
 // Presentation layer. The storage schema and photo IDs remain compatible with older versions.
 let hatiPasso=0,hatiInterfaceId=null,hatiCameraOpening=false,hatiCameraCapture=false;
 // These flags were missing in the received HTML; editing and cleanup reference them.
-let hatiSyncErrors=[],hatiEditBusy=false,hatiCleanupBusy=false;
+let hatiSyncErrors=[],hatiEditBusy=false,hatiCleanupBusy=false,hatiPdfBusy=false;
 function hatiIcon(name){
   const paths={camera:'<path d="M5 6h3l2-3h4l2 3h3a2 2 0 0 1 2 2v11H3V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12" r="4"/>',chat:'<path d="M21 11a9 9 0 0 1-9 9H4l-3 2 2-6a9 9 0 1 1 18-5Z"/><path d="M7 9h10M7 13h7"/>',check:'<path d="m4 12 5 5L20 6"/>',plus:'<path d="M12 5v14M5 12h14"/>',image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1"/><path d="m3 17 5-5 4 4 4-6 5 7"/>',arrow:'<path d="m9 5 7 7-7 7"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',trash:'<path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/>'};
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.chat}</svg>`;
